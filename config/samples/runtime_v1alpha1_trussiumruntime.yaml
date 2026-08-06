@@ -1,0 +1,27 @@
+apiVersion: runtime.trussium.io/v1alpha1
+kind: TrussiumRuntime
+metadata:
+  name: trussiumruntime-sample
+  namespace: default
+spec:
+  image:
+    repository: ghcr.io/trussium/trussium
+    tag: v0.1.0
+
+  provider:
+    type: ollama
+    model: llama3.2
+    baseURL: http://ollama.ollama.svc.cluster.local:11434/v1
+
+  runtime:
+    providerRequestTimeoutSeconds: 60
+    streamIdleTimeoutSeconds: 30
+    shutdownDrainTimeoutSeconds: 45
+
+  resources:
+    requests:
+      cpu: 250m
+      memory: 256Mi
+    limits:
+      cpu: "1"
+      memory: 1Gi

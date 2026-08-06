@@ -14,3 +14,4 @@ boundaries for the Trussium Operator.
 
 - [0001 — Use Go and Kubebuilder](0001-use-go-and-kubebuilder.md)
 - [0002 — Separate the operator from the runtime](0002-separate-operator-and-runtime.md)
+- [0003 — Define the TrussiumRuntime v1alpha1 API](0003-define-trussiumruntime-v1alpha1-api.md)
