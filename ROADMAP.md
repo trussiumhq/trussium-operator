@@ -12,7 +12,7 @@ through GitHub Issues.
 
 ## Current Focus
 
-The repository foundation is being established using Go, Kubebuilder, and
+The repository foundation has been established using Go, Kubebuilder, and
 controller-runtime.
 
 The next priority after the foundation is merged will be the first namespaced
@@ -45,12 +45,12 @@ reviewed and merged.
 
 ## Milestone O1 — Project Foundation
 
-**Status:** 🚧 In Progress
+**Status:** ✅ Completed
 
 Establish the repository, engineering workflow, documentation, and
 architectural boundaries.
 
-### Deliverables
+### Delivered
 
 - Public `trussium-operator` repository
 - Apache License 2.0
@@ -78,8 +78,6 @@ architectural boundaries.
 - Branch-protection guidance
 - Conventional Commit workflow
 
-This milestone will be completed when the project-foundation pull request has
-passed validation and merged into `main`.
 
 ---
 
