@@ -25,7 +25,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/utils/ptr"
 
-	runtimev1alpha1 "github.com/trussium/trussium-operator/api/v1alpha1"
+	runtimev1alpha1 "github.com/trussiumhq/trussium-operator/api/v1alpha1"
 )
 
 const (

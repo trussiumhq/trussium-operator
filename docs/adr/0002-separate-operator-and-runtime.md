@@ -28,13 +28,13 @@ trussium
 The exact Go module is:
 
 ```text
-github.com/trussium/trussium-operator
+github.com/trussiumhq/trussium-operator
 ```
 
 The operator will consume released runtime images:
 
 ```text
-ghcr.io/trussium/trussium:<version>
+ghcr.io/trussiumhq/trussium:<version>
 ```
 
 The operator will not import or duplicate Python runtime source.

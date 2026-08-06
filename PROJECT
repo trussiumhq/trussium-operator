@@ -7,7 +7,7 @@ domain: trussium.io
 layout:
 - go.kubebuilder.io/v4
 projectName: trussium-operator
-repo: github.com/trussium/trussium-operator
+repo: github.com/trussiumhq/trussium-operator
 resources:
 - api:
     crdVersion: v1
@@ -16,6 +16,6 @@ resources:
   domain: trussium.io
   group: runtime
   kind: TrussiumRuntime
-  path: github.com/trussium/trussium-operator/api/v1alpha1
+  path: github.com/trussiumhq/trussium-operator/api/v1alpha1
   version: v1alpha1
 version: "3"

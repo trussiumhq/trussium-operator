@@ -17,9 +17,13 @@ limitations under the License.
 package controller
 
 const (
-	testRuntimeRepository = "ghcr.io/trussium/trussium"
-	testRuntimeTag        = "0.23.0"
-	testRuntimeImage      = testRuntimeRepository + ":" + testRuntimeTag
-	testRuntimeNamespace  = runtimeContainerName
-	testImagePullSecret   = "ghcr-credentials"
+	testRuntimeRepository        = "ghcr.io/trussium/trussium"
+	testRuntimeTag               = "0.23.0"
+	testRuntimeImage             = testRuntimeRepository + ":" + testRuntimeTag
+	testRuntimeNamespace         = runtimeContainerName
+	testImagePullSecret          = "ghcr-credentials"
+	testProviderCredentialSecret = "provider-credentials"
+	testProviderCredentialKey    = "api-key"
+	testRuntimeEndpoint          = "http://production.trussium.svc.cluster.local:9000"
+	testRuntimeReadyMessage      = "The runtime is ready."
 )

@@ -19,6 +19,14 @@ rules:
   - update
   - watch
 - apiGroups:
+  - ""
+  resources:
+  - secrets
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
   - apps
   resources:
   - deployments
@@ -31,6 +39,13 @@ rules:
   - update
   - watch
 - apiGroups:
+  - events.k8s.io
+  resources:
+  - events
+  verbs:
+  - create
+  - patch
+- apiGroups:
   - runtime.trussium.io
   resources:
   - trussiumruntimes
@@ -38,3 +53,11 @@ rules:
   - get
   - list
   - watch
+- apiGroups:
+  - runtime.trussium.io
+  resources:
+  - trussiumruntimes/status
+  verbs:
+  - get
+  - patch
+  - update
