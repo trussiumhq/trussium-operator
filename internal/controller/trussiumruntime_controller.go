@@ -18,32 +18,42 @@ package controller
 
 import (
 	"context"
+	"errors"
 	"fmt"
 
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/client-go/tools/events"
 	ctrl "sigs.k8s.io/controller-runtime"
+	"sigs.k8s.io/controller-runtime/pkg/builder"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/controller/controllerutil"
+	"sigs.k8s.io/controller-runtime/pkg/handler"
 	"sigs.k8s.io/controller-runtime/pkg/log"
+	"sigs.k8s.io/controller-runtime/pkg/predicate"
+	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
-	runtimev1alpha1 "github.com/trussium/trussium-operator/api/v1alpha1"
+	runtimev1alpha1 "github.com/trussiumhq/trussium-operator/api/v1alpha1"
 )
 
 // TrussiumRuntimeReconciler reconciles a TrussiumRuntime resource.
 type TrussiumRuntimeReconciler struct {
 	client.Client
-	Scheme *runtime.Scheme
+	Scheme   *runtime.Scheme
+	Recorder events.EventRecorder
 }
 
 // +kubebuilder:rbac:groups=runtime.trussium.io,resources=trussiumruntimes,verbs=get;list;watch
+// +kubebuilder:rbac:groups=runtime.trussium.io,resources=trussiumruntimes/status,verbs=get;update;patch
 // +kubebuilder:rbac:groups="",resources=configmaps;serviceaccounts;services,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups="",resources=secrets,verbs=get;list;watch
 // +kubebuilder:rbac:groups=apps,resources=deployments,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=events.k8s.io,resources=events,verbs=create;patch
 
-// Reconcile ensures that the Kubernetes resources owned by a TrussiumRuntime
-// match the desired custom-resource specification.
+// Reconcile ensures that the Kubernetes resources and observed status owned by
+// a TrussiumRuntime match the custom-resource specification.
 func (r *TrussiumRuntimeReconciler) Reconcile(
 	ctx context.Context,
 	req ctrl.Request,
@@ -59,8 +69,153 @@ func (r *TrussiumRuntimeReconciler) Reconcile(
 		return ctrl.Result{}, nil
 	}
 
-	if err := r.reconcileConfigMap(ctx, &runtimeResource); err != nil {
-		return ctrl.Result{}, fmt.Errorf(
+	previousStatus := copyRuntimeStatus(runtimeResource.Status)
+
+	validation := r.validateSecretReferences(
+		ctx,
+		&runtimeResource,
+	)
+
+	if validation.Err != nil {
+		return r.handleReconciliationFailure(
+			ctx,
+			&runtimeResource,
+			previousStatus,
+			validation.Err,
+		)
+	}
+
+	if !validation.Valid {
+		return r.reconcileInvalidConfiguration(
+			ctx,
+			&runtimeResource,
+			previousStatus,
+			validation,
+		)
+	}
+
+	if err := r.reconcileCoreResources(
+		ctx,
+		&runtimeResource,
+	); err != nil {
+		return r.handleReconciliationFailure(
+			ctx,
+			&runtimeResource,
+			previousStatus,
+			err,
+		)
+	}
+
+	observation, err := r.loadRuntimeObservation(
+		ctx,
+		&runtimeResource,
+	)
+	if err != nil {
+		return r.handleReconciliationFailure(
+			ctx,
+			&runtimeResource,
+			previousStatus,
+			err,
+		)
+	}
+
+	desiredStatus := buildRuntimeStatus(
+		&runtimeResource,
+		observation,
+		validation,
+	)
+
+	statusUpdated, err := r.updateRuntimeStatus(
+		ctx,
+		&runtimeResource,
+		desiredStatus,
+	)
+	if err != nil {
+		r.recordReconciliationFailure(
+			&runtimeResource,
+			err,
+		)
+
+		return ctrl.Result{}, err
+	}
+
+	if statusUpdated {
+		r.recordStatusTransitionEvents(
+			&runtimeResource,
+			previousStatus,
+			runtimeResource.Status,
+		)
+	}
+
+	logger.Info(
+		"reconciled TrussiumRuntime resources and status",
+		"name",
+		runtimeResource.Name,
+		"namespace",
+		runtimeResource.Namespace,
+		"statusUpdated",
+		statusUpdated,
+	)
+
+	return ctrl.Result{}, nil
+}
+
+func (r *TrussiumRuntimeReconciler) reconcileInvalidConfiguration(
+	ctx context.Context,
+	runtimeResource *runtimev1alpha1.TrussiumRuntime,
+	previousStatus runtimev1alpha1.TrussiumRuntimeStatus,
+	validation referenceValidationResult,
+) (ctrl.Result, error) {
+	observation, err := r.loadRuntimeObservation(
+		ctx,
+		runtimeResource,
+	)
+	if err != nil {
+		return r.handleReconciliationFailure(
+			ctx,
+			runtimeResource,
+			previousStatus,
+			err,
+		)
+	}
+
+	desiredStatus := buildRuntimeStatus(
+		runtimeResource,
+		observation,
+		validation,
+	)
+
+	statusUpdated, err := r.updateRuntimeStatus(
+		ctx,
+		runtimeResource,
+		desiredStatus,
+	)
+	if err != nil {
+		r.recordReconciliationFailure(
+			runtimeResource,
+			err,
+		)
+
+		return ctrl.Result{}, err
+	}
+
+	if statusUpdated {
+		r.recordStatusTransitionEvents(
+			runtimeResource,
+			previousStatus,
+			runtimeResource.Status,
+		)
+	}
+
+	return ctrl.Result{}, nil
+}
+
+func (r *TrussiumRuntimeReconciler) reconcileCoreResources(
+	ctx context.Context,
+	runtimeResource *runtimev1alpha1.TrussiumRuntime,
+) error {
+	if err := r.reconcileConfigMap(ctx, runtimeResource); err != nil {
+		return fmt.Errorf(
 			"reconcile ConfigMap %s/%s: %w",
 			runtimeResource.Namespace,
 			runtimeResource.Name,
@@ -68,8 +223,11 @@ func (r *TrussiumRuntimeReconciler) Reconcile(
 		)
 	}
 
-	if err := r.reconcileServiceAccount(ctx, &runtimeResource); err != nil {
-		return ctrl.Result{}, fmt.Errorf(
+	if err := r.reconcileServiceAccount(
+		ctx,
+		runtimeResource,
+	); err != nil {
+		return fmt.Errorf(
 			"reconcile ServiceAccount %s/%s: %w",
 			runtimeResource.Namespace,
 			runtimeResource.Name,
@@ -77,8 +235,8 @@ func (r *TrussiumRuntimeReconciler) Reconcile(
 		)
 	}
 
-	if err := r.reconcileService(ctx, &runtimeResource); err != nil {
-		return ctrl.Result{}, fmt.Errorf(
+	if err := r.reconcileService(ctx, runtimeResource); err != nil {
+		return fmt.Errorf(
 			"reconcile Service %s/%s: %w",
 			runtimeResource.Namespace,
 			runtimeResource.Name,
@@ -86,8 +244,11 @@ func (r *TrussiumRuntimeReconciler) Reconcile(
 		)
 	}
 
-	if err := r.reconcileDeployment(ctx, &runtimeResource); err != nil {
-		return ctrl.Result{}, fmt.Errorf(
+	if err := r.reconcileDeployment(
+		ctx,
+		runtimeResource,
+	); err != nil {
+		return fmt.Errorf(
 			"reconcile Deployment %s/%s: %w",
 			runtimeResource.Namespace,
 			runtimeResource.Name,
@@ -95,15 +256,58 @@ func (r *TrussiumRuntimeReconciler) Reconcile(
 		)
 	}
 
-	logger.Info(
-		"reconciled TrussiumRuntime resources",
-		"name",
-		runtimeResource.Name,
-		"namespace",
-		runtimeResource.Namespace,
+	return nil
+}
+
+func (r *TrussiumRuntimeReconciler) handleReconciliationFailure(
+	ctx context.Context,
+	runtimeResource *runtimev1alpha1.TrussiumRuntime,
+	previousStatus runtimev1alpha1.TrussiumRuntimeStatus,
+	reconciliationError error,
+) (ctrl.Result, error) {
+	observation, observationError := r.loadRuntimeObservation(
+		ctx,
+		runtimeResource,
+	)
+	if observationError != nil {
+		reconciliationError = errors.Join(
+			reconciliationError,
+			observationError,
+		)
+	}
+
+	desiredStatus := buildReconciliationFailureStatus(
+		runtimeResource,
+		observation,
+		reconciliationError,
 	)
 
-	return ctrl.Result{}, nil
+	statusUpdated, statusError := r.updateRuntimeStatus(
+		ctx,
+		runtimeResource,
+		desiredStatus,
+	)
+	if statusError != nil {
+		reconciliationError = errors.Join(
+			reconciliationError,
+			statusError,
+		)
+	}
+
+	if statusUpdated {
+		r.recordStatusTransitionEvents(
+			runtimeResource,
+			previousStatus,
+			runtimeResource.Status,
+		)
+	}
+
+	r.recordReconciliationFailure(
+		runtimeResource,
+		reconciliationError,
+	)
+
+	return ctrl.Result{}, reconciliationError
 }
 
 func (r *TrussiumRuntimeReconciler) reconcileConfigMap(
@@ -238,17 +442,76 @@ func (r *TrussiumRuntimeReconciler) reconcileDeployment(
 	return err
 }
 
-// SetupWithManager configures watches for TrussiumRuntime and its owned
-// Kubernetes resources.
+func (r *TrussiumRuntimeReconciler) mapSecretToRuntimes(
+	ctx context.Context,
+	object client.Object,
+) []reconcile.Request {
+	var runtimeList runtimev1alpha1.TrussiumRuntimeList
+
+	if err := r.List(
+		ctx,
+		&runtimeList,
+		client.InNamespace(object.GetNamespace()),
+	); err != nil {
+		log.FromContext(ctx).Error(
+			err,
+			"unable to list TrussiumRuntime resources for Secret",
+			"secret",
+			object.GetName(),
+			"namespace",
+			object.GetNamespace(),
+		)
+
+		return nil
+	}
+
+	requests := make([]reconcile.Request, 0)
+
+	for index := range runtimeList.Items {
+		runtimeResource := &runtimeList.Items[index]
+
+		if !runtimeReferencesSecret(
+			runtimeResource,
+			object.GetName(),
+		) {
+			continue
+		}
+
+		requests = append(
+			requests,
+			reconcile.Request{
+				NamespacedName: client.ObjectKeyFromObject(
+					runtimeResource,
+				),
+			},
+		)
+	}
+
+	return requests
+}
+
+// SetupWithManager configures watches for TrussiumRuntime, owned Kubernetes
+// resources, and referenced Secrets.
 func (r *TrussiumRuntimeReconciler) SetupWithManager(
 	mgr ctrl.Manager,
 ) error {
 	return ctrl.NewControllerManagedBy(mgr).
-		For(&runtimev1alpha1.TrussiumRuntime{}).
+		For(
+			&runtimev1alpha1.TrussiumRuntime{},
+			builder.WithPredicates(
+				predicate.GenerationChangedPredicate{},
+			),
+		).
 		Owns(&corev1.ConfigMap{}).
 		Owns(&corev1.ServiceAccount{}).
 		Owns(&corev1.Service{}).
 		Owns(&appsv1.Deployment{}).
+		Watches(
+			&corev1.Secret{},
+			handler.EnqueueRequestsFromMapFunc(
+				r.mapSecretToRuntimes,
+			),
+		).
 		Named("trussiumruntime").
 		Complete(r)
 }

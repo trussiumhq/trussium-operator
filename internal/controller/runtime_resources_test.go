@@ -25,7 +25,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/ptr"
 
-	runtimev1alpha1 "github.com/trussium/trussium-operator/api/v1alpha1"
+	runtimev1alpha1 "github.com/trussiumhq/trussium-operator/api/v1alpha1"
 )
 
 func TestRuntimeImageWithTag(t *testing.T) {
@@ -209,7 +209,7 @@ func TestBuildDeployment(t *testing.T) {
 	runtimeResource.Spec.Provider.CredentialsSecretRef =
 		&runtimev1alpha1.SecretKeyReference{
 			Name: "ollama-credentials",
-			Key:  "api-key",
+			Key:  testProviderCredentialKey,
 		}
 	runtimeResource.Spec.Resources = corev1.ResourceRequirements{
 		Requests: corev1.ResourceList{
@@ -296,7 +296,7 @@ func TestBuildDeployment(t *testing.T) {
 	}
 
 	if credential.ValueFrom.SecretKeyRef.Name != "ollama-credentials" ||
-		credential.ValueFrom.SecretKeyRef.Key != "api-key" {
+		credential.ValueFrom.SecretKeyRef.Key != testProviderCredentialKey {
 		t.Fatalf(
 			"unexpected Secret key reference: %#v",
 			credential.ValueFrom.SecretKeyRef,

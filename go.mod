@@ -1,4 +1,4 @@
-module github.com/trussium/trussium-operator
+module github.com/trussiumhq/trussium-operator
 
 go 1.26.0
 

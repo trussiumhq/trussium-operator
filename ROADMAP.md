@@ -12,24 +12,27 @@ through GitHub Issues.
 
 ## Current Focus
 
-Core `TrussiumRuntime` reconciliation has been implemented.
+Kubernetes-native `TrussiumRuntime` status and Events have been implemented.
 
-For every namespaced runtime resource, the controller now manages:
+The controller now reports:
 
-- ConfigMap
-- ServiceAccount
-- Service
-- Deployment
+- Processed custom-resource generation
+- Ready and available runtime replicas
+- Current runtime image
+- Internal Service endpoint
+- Configuration validity
+- Deployment progress
+- Runtime readiness and availability
+- Degraded state
 
-Managed resources use deterministic names, stable labels, controller owner
-references, and create-or-update reconciliation.
+Referenced provider and image-pull Secrets are validated for existence without
+reading their values.
 
-The controller recreates deleted resources, corrects managed configuration
-drift, projects provider credentials through Secret key references, and does
-not read Secret values.
+The controller watches referenced Secrets and emits transition-based
+`events.k8s.io/v1` Events without producing duplicate Events during unchanged
+reconciliation.
 
-The next priority is Kubernetes-native runtime status and reconciliation
-Events.
+The next priority is the production runtime deployment contract.
 
 ---
 
@@ -181,26 +184,64 @@ Kubernetes Events.
 
 ## Milestone O4 — Status and Kubernetes Events
 
-**Status:** 🗓 Planned
+**Status:** ✅ Completed
 
-Expose runtime state through Kubernetes-native status and events.
+Expose runtime state through Kubernetes-native status and Events.
 
-### Deliverables
+### Delivered
 
+- Status-subresource updates
+- Semantic no-op status detection
+- Condition transition-time preservation
 - `observedGeneration`
-- Desired and current image
-- Ready replicas
-- Available replicas
-- Runtime endpoint
-- `Ready` condition
-- `Available` condition
-- `Progressing` condition
-- `Degraded` condition
+- Ready replica projection
+- Available replica projection
+- Current runtime image projection
+- Internal runtime Service endpoint
 - `ConfigurationValid` condition
-- Reconciliation events
-- Missing Secret reporting
-- Deployment failure reporting
+- `Progressing` condition
+- `Available` condition
+- `Ready` condition
+- `Degraded` condition
 - Stable condition reasons
+- Condition observed generations
+- Deployment generation observation
+- Deployment progress reporting
+- Progress deadline failure reporting
+- Deployment replica failure reporting
+- Scale-to-zero status semantics
+- Provider credential Secret existence validation
+- Image-pull Secret existence validation
+- Namespace-scoped Secret validation
+- Secret-reference watch
+- Deployment blocking for invalid references
+- Secret-reference recovery
+- Status-only primary-update filtering
+- Modern `events.k8s.io/v1` recorder
+- `RuntimeProgressing` Event
+- `RuntimeReady` Event
+- `RuntimeRecovered` Event
+- `RuntimeScaledToZero` Event
+- `ConfigurationInvalid` Event
+- `ReconciliationFailed` Event
+- `RuntimeDegraded` Event
+- Duplicate transition-Event prevention
+- Status RBAC
+- Read-only Secret RBAC
+- Modern Events RBAC
+- No Pod permissions
+- Status construction tests
+- Secret-reference validation tests
+- Transition-time tests
+- Status-subresource tests
+- No-op status-write tests
+- Transition Event tests
+- Secret recovery tests
+- Secret mapping tests
+- Status and Events documentation
+- Status and transition-Event architecture decision record
+
+The controller never reads, logs, copies, or exposes Secret values.
 
 ---
 
@@ -383,16 +424,22 @@ Compatibility will be tracked by operator and runtime release:
 
 The next priority is:
 
-1. Implement `TrussiumRuntime` status and Kubernetes Events.
+1. Implement the production runtime deployment contract.
 
 The next milestone will add:
 
-- `observedGeneration`
-- Ready replica count
-- Available replica count
-- Current runtime image
-- Runtime Service endpoint
-- Standard Kubernetes conditions
-- Stable condition reasons
-- Reconciliation Events
-- Missing-reference and Deployment failure reporting
+- Startup probe
+- Liveness probe
+- Readiness probe
+- Non-root runtime execution
+- Read-only root filesystem support
+- Dropped Linux capabilities
+- No-new-privileges support
+- Graceful termination timing
+- PodDisruptionBudget
+- Topology spreading
+- Zero-unavailable rolling updates
+- Pod labels and annotations
+- Node selector
+- Tolerations
+- Affinity configuration

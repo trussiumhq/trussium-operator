@@ -6,9 +6,10 @@ The Trussium Operator is the Kubernetes-native lifecycle manager for
 It provides a declarative Kubernetes API for deploying, configuring, upgrading,
 and observing released Trussium runtime containers.
 
-> **Project status:** Pre-alpha. The initial `TrussiumRuntime v1alpha1` API and
-> core ConfigMap, ServiceAccount, Service, and Deployment reconciliation are
-> implemented. Runtime status and Kubernetes Events are the next milestone.
+> **Project status:** Pre-alpha. The initial `TrussiumRuntime v1alpha1` API,
+> core workload reconciliation, runtime status, Secret-reference validation,
+> and Kubernetes Events are implemented. Production workload hardening is the
+> next milestone.
 
 ## Architecture
 
@@ -17,10 +18,13 @@ and observing released Trussium runtime containers.
                  ▼
           Trussium Operator
                  │
-                 ├── ConfigMap
-                 ├── ServiceAccount
-                 ├── Service
-                 └── Deployment
+                 ├── validates referenced Secrets
+                 ├── reconciles ConfigMap
+                 ├── reconciles ServiceAccount
+                 ├── reconciles Service
+                 ├── reconciles Deployment
+                 ├── updates runtime status
+                 └── emits Kubernetes Events
                              │
                              ▼
            ghcr.io/trussium/trussium:<version>
@@ -72,8 +76,32 @@ resource names, and create-or-update reconciliation.
 
 It recreates deleted managed resources and corrects configuration drift.
 
-See [docs/RECONCILIATION.md](docs/RECONCILIATION.md) for the complete
-reconciliation contract.
+See [docs/RECONCILIATION.md](docs/RECONCILIATION.md) for the reconciliation
+contract.
+
+## Runtime Status
+
+The operator reports:
+
+- Observed generation
+- Ready replicas
+- Available replicas
+- Current runtime image
+- Internal Service endpoint
+- Configuration validity
+- Deployment progress
+- Runtime availability
+- Runtime readiness
+- Degraded state
+
+Referenced provider and image-pull Secrets are checked for existence without
+reading their values.
+
+The operator emits transition-based `events.k8s.io/v1` Events for readiness,
+progress, recovery, configuration failures, degraded state, and reconciliation
+failures.
+
+See [docs/STATUS_AND_EVENTS.md](docs/STATUS_AND_EVENTS.md).
 
 ## Repository Responsibilities
 
@@ -84,6 +112,7 @@ This repository owns:
 - Runtime deployment reconciliation
 - Runtime configuration projection
 - Kubernetes status reporting
+- Kubernetes lifecycle Events
 - Operator packaging and installation
 - Runtime and operator compatibility documentation
 
@@ -124,8 +153,8 @@ Run:
 
 The public operator roadmap is maintained in [ROADMAP.md](ROADMAP.md).
 
-The next milestone adds Kubernetes-native runtime status and reconciliation
-Events.
+The next milestone hardens the managed Trussium runtime workload for
+production Kubernetes operation.
 
 ## Contributing
 

@@ -18,18 +18,21 @@ package controller
 
 import (
 	"context"
+	"strings"
 	"testing"
 
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/client-go/tools/events"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 
-	runtimev1alpha1 "github.com/trussium/trussium-operator/api/v1alpha1"
+	runtimev1alpha1 "github.com/trussiumhq/trussium-operator/api/v1alpha1"
 )
 
 func TestReconcileCreatesOwnedRuntimeResources(t *testing.T) {
@@ -40,6 +43,9 @@ func TestReconcileCreatesOwnedRuntimeResources(t *testing.T) {
 
 	fakeClient := fake.NewClientBuilder().
 		WithScheme(scheme).
+		WithStatusSubresource(
+			&runtimev1alpha1.TrussiumRuntime{},
+		).
 		WithObjects(runtimeResource).
 		Build()
 
@@ -100,6 +106,9 @@ func TestReconcileCorrectsDrift(t *testing.T) {
 
 	fakeClient := fake.NewClientBuilder().
 		WithScheme(scheme).
+		WithStatusSubresource(
+			&runtimev1alpha1.TrussiumRuntime{},
+		).
 		WithObjects(runtimeResource).
 		Build()
 
@@ -172,6 +181,9 @@ func TestReconcileRecreatesDeletedManagedResource(t *testing.T) {
 
 	fakeClient := fake.NewClientBuilder().
 		WithScheme(scheme).
+		WithStatusSubresource(
+			&runtimev1alpha1.TrussiumRuntime{},
+		).
 		WithObjects(runtimeResource).
 		Build()
 
@@ -225,6 +237,9 @@ func TestReconcileIsIdempotent(t *testing.T) {
 
 	fakeClient := fake.NewClientBuilder().
 		WithScheme(scheme).
+		WithStatusSubresource(
+			&runtimev1alpha1.TrussiumRuntime{},
+		).
 		WithObjects(runtimeResource).
 		Build()
 
@@ -317,5 +332,427 @@ func assertManagedResourceExists(
 			"managed %T is missing operator label",
 			object,
 		)
+	}
+}
+
+func TestReconcileUpdatesRuntimeStatus(t *testing.T) {
+	ctx := context.Background()
+	scheme := newTestScheme(t)
+	runtimeResource := newTestRuntime()
+	runtimeResource.UID = types.UID("runtime-status-uid")
+	runtimeResource.Generation = 3
+
+	recorder := events.NewFakeRecorder(20)
+
+	kubernetesClient := fake.NewClientBuilder().
+		WithScheme(scheme).
+		WithStatusSubresource(
+			&runtimev1alpha1.TrussiumRuntime{},
+		).
+		WithObjects(runtimeResource).
+		Build()
+
+	reconciler := TrussiumRuntimeReconciler{
+		Client:   kubernetesClient,
+		Scheme:   scheme,
+		Recorder: recorder,
+	}
+
+	request := ctrl.Request{
+		NamespacedName: client.ObjectKeyFromObject(runtimeResource),
+	}
+
+	if _, err := reconciler.Reconcile(ctx, request); err != nil {
+		t.Fatalf("reconcile TrussiumRuntime: %v", err)
+	}
+
+	var storedRuntime runtimev1alpha1.TrussiumRuntime
+	if err := kubernetesClient.Get(
+		ctx,
+		request.NamespacedName,
+		&storedRuntime,
+	); err != nil {
+		t.Fatalf("get reconciled TrussiumRuntime: %v", err)
+	}
+
+	if storedRuntime.Status.ObservedGeneration != 3 {
+		t.Fatalf(
+			"expected observed generation 3, received %d",
+			storedRuntime.Status.ObservedGeneration,
+		)
+	}
+
+	if storedRuntime.Status.CurrentImage != testRuntimeImage {
+		t.Fatalf(
+			"expected current image %q, received %q",
+			testRuntimeImage,
+			storedRuntime.Status.CurrentImage,
+		)
+	}
+
+	expectedEndpoint :=
+		testRuntimeEndpoint
+
+	if storedRuntime.Status.Endpoint != expectedEndpoint {
+		t.Fatalf(
+			"expected endpoint %q, received %q",
+			expectedEndpoint,
+			storedRuntime.Status.Endpoint,
+		)
+	}
+
+	assertRuntimeCondition(
+		t,
+		storedRuntime.Status,
+		conditionTypeConfigurationValid,
+		metav1.ConditionTrue,
+		reasonReferencesResolved,
+	)
+
+	assertRuntimeCondition(
+		t,
+		storedRuntime.Status,
+		conditionTypeProgressing,
+		metav1.ConditionTrue,
+		reasonDeploymentProgressing,
+	)
+}
+
+func TestReconcileBlocksDeploymentForMissingProviderSecret(
+	t *testing.T,
+) {
+	ctx := context.Background()
+	scheme := newTestScheme(t)
+	runtimeResource := newTestRuntime()
+	runtimeResource.UID = types.UID("missing-secret-uid")
+	runtimeResource.Generation = 2
+	runtimeResource.Spec.Provider.CredentialsSecretRef =
+		&runtimev1alpha1.SecretKeyReference{
+			Name: testProviderCredentialSecret,
+			Key:  testProviderCredentialKey,
+		}
+
+	recorder := events.NewFakeRecorder(20)
+
+	kubernetesClient := fake.NewClientBuilder().
+		WithScheme(scheme).
+		WithStatusSubresource(
+			&runtimev1alpha1.TrussiumRuntime{},
+		).
+		WithObjects(runtimeResource).
+		Build()
+
+	reconciler := TrussiumRuntimeReconciler{
+		Client:   kubernetesClient,
+		Scheme:   scheme,
+		Recorder: recorder,
+	}
+
+	request := ctrl.Request{
+		NamespacedName: client.ObjectKeyFromObject(runtimeResource),
+	}
+
+	if _, err := reconciler.Reconcile(ctx, request); err != nil {
+		t.Fatalf(
+			"missing referenced Secret must be reported in status: %v",
+			err,
+		)
+	}
+
+	var deployment appsv1.Deployment
+	err := kubernetesClient.Get(
+		ctx,
+		request.NamespacedName,
+		&deployment,
+	)
+	if !apierrors.IsNotFound(err) {
+		t.Fatalf(
+			"expected Deployment not to be created, received %v",
+			err,
+		)
+	}
+
+	var storedRuntime runtimev1alpha1.TrussiumRuntime
+	if err := kubernetesClient.Get(
+		ctx,
+		request.NamespacedName,
+		&storedRuntime,
+	); err != nil {
+		t.Fatalf("get updated TrussiumRuntime: %v", err)
+	}
+
+	assertRuntimeCondition(
+		t,
+		storedRuntime.Status,
+		conditionTypeConfigurationValid,
+		metav1.ConditionFalse,
+		reasonSecretNotFound,
+	)
+
+	assertRuntimeCondition(
+		t,
+		storedRuntime.Status,
+		conditionTypeDegraded,
+		metav1.ConditionTrue,
+		reasonConfigurationInvalid,
+	)
+
+	event := receiveRecordedEvent(t, recorder)
+	if !strings.Contains(
+		event,
+		eventReasonConfigurationInvalid,
+	) {
+		t.Fatalf(
+			"expected ConfigurationInvalid Event, received %q",
+			event,
+		)
+	}
+}
+
+func TestReconcileRecoversAfterReferencedSecretIsCreated(
+	t *testing.T,
+) {
+	ctx := context.Background()
+	scheme := newTestScheme(t)
+	runtimeResource := newTestRuntime()
+	runtimeResource.UID = types.UID("secret-recovery-uid")
+	runtimeResource.Generation = 2
+	runtimeResource.Spec.Provider.CredentialsSecretRef =
+		&runtimev1alpha1.SecretKeyReference{
+			Name: testProviderCredentialSecret,
+			Key:  testProviderCredentialKey,
+		}
+
+	recorder := events.NewFakeRecorder(30)
+
+	kubernetesClient := fake.NewClientBuilder().
+		WithScheme(scheme).
+		WithStatusSubresource(
+			&runtimev1alpha1.TrussiumRuntime{},
+		).
+		WithObjects(runtimeResource).
+		Build()
+
+	reconciler := TrussiumRuntimeReconciler{
+		Client:   kubernetesClient,
+		Scheme:   scheme,
+		Recorder: recorder,
+	}
+
+	request := ctrl.Request{
+		NamespacedName: client.ObjectKeyFromObject(runtimeResource),
+	}
+
+	if _, err := reconciler.Reconcile(ctx, request); err != nil {
+		t.Fatalf("initial invalid reconciliation: %v", err)
+	}
+
+	drainRecordedEvents(recorder)
+
+	secret := &corev1.Secret{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      testProviderCredentialSecret,
+			Namespace: runtimeResource.Namespace,
+		},
+	}
+
+	if err := kubernetesClient.Create(ctx, secret); err != nil {
+		t.Fatalf("create referenced Secret: %v", err)
+	}
+
+	if _, err := reconciler.Reconcile(ctx, request); err != nil {
+		t.Fatalf("reconcile after Secret creation: %v", err)
+	}
+
+	var deployment appsv1.Deployment
+	if err := kubernetesClient.Get(
+		ctx,
+		request.NamespacedName,
+		&deployment,
+	); err != nil {
+		t.Fatalf(
+			"expected Deployment after Secret recovery: %v",
+			err,
+		)
+	}
+
+	var storedRuntime runtimev1alpha1.TrussiumRuntime
+	if err := kubernetesClient.Get(
+		ctx,
+		request.NamespacedName,
+		&storedRuntime,
+	); err != nil {
+		t.Fatalf("get recovered TrussiumRuntime: %v", err)
+	}
+
+	assertRuntimeCondition(
+		t,
+		storedRuntime.Status,
+		conditionTypeConfigurationValid,
+		metav1.ConditionTrue,
+		reasonReferencesResolved,
+	)
+
+	foundRecoveryEvent := false
+	for _, event := range drainRecordedEvents(recorder) {
+		if strings.Contains(
+			event,
+			eventReasonRuntimeRecovered,
+		) {
+			foundRecoveryEvent = true
+			break
+		}
+	}
+
+	if !foundRecoveryEvent {
+		t.Fatal("expected RuntimeRecovered Event")
+	}
+}
+
+func TestReconcileDoesNotEmitDuplicateTransitionEvents(
+	t *testing.T,
+) {
+	ctx := context.Background()
+	scheme := newTestScheme(t)
+	runtimeResource := newTestRuntime()
+	runtimeResource.UID = types.UID("event-idempotency-uid")
+	runtimeResource.Generation = 1
+
+	recorder := events.NewFakeRecorder(30)
+
+	kubernetesClient := fake.NewClientBuilder().
+		WithScheme(scheme).
+		WithStatusSubresource(
+			&runtimev1alpha1.TrussiumRuntime{},
+		).
+		WithObjects(runtimeResource).
+		Build()
+
+	reconciler := TrussiumRuntimeReconciler{
+		Client:   kubernetesClient,
+		Scheme:   scheme,
+		Recorder: recorder,
+	}
+
+	request := ctrl.Request{
+		NamespacedName: client.ObjectKeyFromObject(runtimeResource),
+	}
+
+	if _, err := reconciler.Reconcile(ctx, request); err != nil {
+		t.Fatalf("first reconciliation: %v", err)
+	}
+
+	drainRecordedEvents(recorder)
+
+	if _, err := reconciler.Reconcile(ctx, request); err != nil {
+		t.Fatalf("second reconciliation: %v", err)
+	}
+
+	eventsAfterSecondReconciliation :=
+		drainRecordedEvents(recorder)
+
+	if len(eventsAfterSecondReconciliation) != 0 {
+		t.Fatalf(
+			"expected no duplicate transition Events, received %#v",
+			eventsAfterSecondReconciliation,
+		)
+	}
+}
+
+func TestMapSecretToRuntimes(t *testing.T) {
+	ctx := context.Background()
+	scheme := newTestScheme(t)
+
+	firstRuntime := newTestRuntime()
+	firstRuntime.Name = "first"
+	firstRuntime.Spec.Provider.CredentialsSecretRef =
+		&runtimev1alpha1.SecretKeyReference{
+			Name: testProviderCredentialSecret,
+			Key:  testProviderCredentialKey,
+		}
+
+	secondRuntime := newTestRuntime()
+	secondRuntime.Name = "second"
+	secondRuntime.Spec.ImagePullSecrets =
+		[]runtimev1alpha1.NamedReference{
+			{Name: testImagePullSecret},
+		}
+
+	unrelatedRuntime := newTestRuntime()
+	unrelatedRuntime.Name = "unrelated"
+
+	kubernetesClient := fake.NewClientBuilder().
+		WithScheme(scheme).
+		WithStatusSubresource(
+			&runtimev1alpha1.TrussiumRuntime{},
+		).
+		WithObjects(
+			firstRuntime,
+			secondRuntime,
+			unrelatedRuntime,
+		).
+		Build()
+
+	reconciler := TrussiumRuntimeReconciler{
+		Client: kubernetesClient,
+		Scheme: scheme,
+	}
+
+	requests := reconciler.mapSecretToRuntimes(
+		ctx,
+		&corev1.Secret{
+			ObjectMeta: metav1.ObjectMeta{
+				Name:      testProviderCredentialSecret,
+				Namespace: testRuntimeNamespace,
+			},
+		},
+	)
+
+	if len(requests) != 1 {
+		t.Fatalf(
+			"expected one request, received %#v",
+			requests,
+		)
+	}
+
+	if requests[0].Name != firstRuntime.Name {
+		t.Fatalf(
+			"expected runtime %q, received %q",
+			firstRuntime.Name,
+			requests[0].Name,
+		)
+	}
+}
+
+func receiveRecordedEvent(
+	t *testing.T,
+	recorder *events.FakeRecorder,
+) string {
+	t.Helper()
+
+	select {
+	case event := <-recorder.Events:
+		return event
+	default:
+		t.Fatal("expected a recorded Kubernetes Event")
+		return ""
+	}
+}
+
+func drainRecordedEvents(
+	recorder *events.FakeRecorder,
+) []string {
+	recordedEvents := make([]string, 0)
+
+	for {
+		select {
+		case event := <-recorder.Events:
+			recordedEvents = append(
+				recordedEvents,
+				event,
+			)
+		default:
+			return recordedEvents
+		}
 	}
 }

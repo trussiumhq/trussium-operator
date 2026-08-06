@@ -1,8 +1,8 @@
 blank_issues_enabled: false
 contact_links:
   - name: Security vulnerability
-    url: https://github.com/trussium/trussium-operator/security/advisories/new
+    url: https://github.com/trussiumhq/trussium-operator/security/advisories/new
     about: Report suspected vulnerabilities privately.
   - name: Community discussion
-    url: https://github.com/trussium/trussium-operator/discussions
+    url: https://github.com/trussiumhq/trussium-operator/discussions
     about: Ask questions or discuss ideas that are not ready for an issue.

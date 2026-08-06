@@ -35,8 +35,8 @@ import (
 	metricsserver "sigs.k8s.io/controller-runtime/pkg/metrics/server"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
 
-	runtimev1alpha1 "github.com/trussium/trussium-operator/api/v1alpha1"
-	"github.com/trussium/trussium-operator/internal/controller"
+	runtimev1alpha1 "github.com/trussiumhq/trussium-operator/api/v1alpha1"
+	"github.com/trussiumhq/trussium-operator/internal/controller"
 	// +kubebuilder:scaffold:imports
 )
 
@@ -179,8 +179,9 @@ func main() {
 	}
 
 	if err := (&controller.TrussiumRuntimeReconciler{
-		Client: mgr.GetClient(),
-		Scheme: mgr.GetScheme(),
+		Client:   mgr.GetClient(),
+		Scheme:   mgr.GetScheme(),
+		Recorder: mgr.GetEventRecorder("trussiumruntime"),
 	}).SetupWithManager(mgr); err != nil {
 		setupLog.Error(err, "Failed to create controller", "controller", "trussiumruntime")
 		os.Exit(1)
