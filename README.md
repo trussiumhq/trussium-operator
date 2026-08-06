@@ -6,37 +6,76 @@ The Trussium Operator is the Kubernetes-native lifecycle manager for
 It provides a declarative Kubernetes API for deploying, configuring, upgrading,
 and observing released Trussium runtime containers.
 
-> **Project status:** Pre-alpha. The repository currently contains the
-> engineering foundation. The first `TrussiumRuntime` API has not yet been
-> released.
+> **Project status:** Pre-alpha. The initial `TrussiumRuntime v1alpha1` API and
+> core ConfigMap, ServiceAccount, Service, and Deployment reconciliation are
+> implemented. Runtime status and Kubernetes Events are the next milestone.
 
 ## Architecture
 
-The operator will watch `TrussiumRuntime` custom resources and reconcile the
-Kubernetes resources required to operate each runtime instance.
-
-```text
-TrussiumRuntime custom resource
-             │
-             ▼
-      Trussium Operator
-             │
-             ├── ServiceAccount
-             ├── ConfigMap
-             ├── Deployment
-             ├── Service
-             ├── PodDisruptionBudget
-             └── Status conditions
-                         │
-                         ▼
-       ghcr.io/trussium/trussium:<version>
-```
+    TrussiumRuntime custom resource
+                 │
+                 ▼
+          Trussium Operator
+                 │
+                 ├── ConfigMap
+                 ├── ServiceAccount
+                 ├── Service
+                 └── Deployment
+                             │
+                             ▼
+           ghcr.io/trussium/trussium:<version>
 
 The operator does not contain or compile the Trussium Python runtime. It
 consumes released runtime container images and manages their Kubernetes
 deployment lifecycle.
 
-## Repository responsibilities
+## Custom Resource
+
+The initial API is:
+
+    Group:   runtime.trussium.io
+    Version: v1alpha1
+    Kind:    TrussiumRuntime
+    Scope:   Namespaced
+
+Example:
+
+    apiVersion: runtime.trussium.io/v1alpha1
+    kind: TrussiumRuntime
+    metadata:
+      name: private-ai
+      namespace: trussium
+    spec:
+      image:
+        repository: ghcr.io/trussium/trussium
+        tag: v0.23.0
+
+      provider:
+        type: ollama
+        model: llama3.2
+        baseURL: http://ollama.ollama.svc.cluster.local:11434/v1
+
+See [docs/CUSTOM_RESOURCE.md](docs/CUSTOM_RESOURCE.md) for the complete API
+contract.
+
+## Core Reconciliation
+
+For every `TrussiumRuntime`, the operator manages:
+
+- ConfigMap
+- ServiceAccount
+- Service
+- Deployment
+
+The controller uses stable labels, controller owner references, deterministic
+resource names, and create-or-update reconciliation.
+
+It recreates deleted managed resources and corrects configuration drift.
+
+See [docs/RECONCILIATION.md](docs/RECONCILIATION.md) for the complete
+reconciliation contract.
+
+## Repository Responsibilities
 
 This repository owns:
 
@@ -72,23 +111,21 @@ The public [`trussium`](https://github.com/trussium/trussium) repository owns:
 
 See [DEVELOPMENT.md](DEVELOPMENT.md) for local setup and validation.
 
-The standard validation workflow is:
+Run:
 
-```bash
-make generate
-make manifests
-make fmt
-make vet
-make test
-make lint
-```
+    make generate
+    make manifests
+    make fmt
+    make vet
+    make test
+    make lint
 
 ## Roadmap
 
 The public operator roadmap is maintained in [ROADMAP.md](ROADMAP.md).
 
-The next planned milestone is the initial
-`runtime.trussium.io/v1alpha1` `TrussiumRuntime` API.
+The next milestone adds Kubernetes-native runtime status and reconciliation
+Events.
 
 ## Contributing
 

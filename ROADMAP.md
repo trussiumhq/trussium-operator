@@ -12,25 +12,24 @@ through GitHub Issues.
 
 ## Current Focus
 
-The repository foundation has been established using Go, Kubebuilder, and
-controller-runtime.
+Core `TrussiumRuntime` reconciliation has been implemented.
 
-The next priority after the foundation is merged will be the first namespaced
-Kubernetes API:
+For every namespaced runtime resource, the controller now manages:
 
-```text
-Group:   runtime.trussium.io
-Version: v1alpha1
-Kind:    TrussiumRuntime
-Scope:   Namespaced
-```
+- ConfigMap
+- ServiceAccount
+- Service
+- Deployment
 
-The initial API will describe the desired Trussium runtime image, replicas,
-provider configuration references, runtime settings, resource boundaries, and
-Service configuration.
+Managed resources use deterministic names, stable labels, controller owner
+references, and create-or-update reconciliation.
 
-No runtime reconciliation will be introduced until the API contract is
-reviewed and merged.
+The controller recreates deleted resources, corrects managed configuration
+drift, projects provider credentials through Secret key references, and does
+not read Secret values.
+
+The next priority is Kubernetes-native runtime status and reconciliation
+Events.
 
 ---
 
@@ -126,24 +125,57 @@ Provider credentials will never be embedded directly in custom resources.
 
 ## Milestone O3 — Core Runtime Reconciliation
 
-**Status:** 🗓 Planned
+**Status:** ✅ Completed
 
 Reconcile a functional Trussium runtime from a `TrussiumRuntime` resource.
 
-### Deliverables
+### Delivered
 
+- `TrussiumRuntime` controller scaffold
+- Controller registration with the manager
+- Watches for `TrussiumRuntime`
+- Watches for owned ConfigMaps
+- Watches for owned ServiceAccounts
+- Watches for owned Services
+- Watches for owned Deployments
 - ConfigMap reconciliation
 - ServiceAccount reconciliation
 - Service reconciliation
 - Deployment reconciliation
 - Stable Kubernetes labels
+- Stable selectors
+- Deterministic resource names
 - Controller owner references
+- Kubernetes garbage-collection ownership
+- Create-or-update reconciliation
 - Drift correction
-- Idempotent reconciliation
-- Runtime container image projection
+- Deleted-resource recreation
+- Idempotent repeated reconciliation
+- Runtime image tag rendering
+- Runtime image digest rendering
+- Image-pull Secret projection
 - Runtime environment projection
+- Provider configuration projection
+- Provider credential Secret projection
+- Service configuration projection
+- Replica projection
 - Resource request and limit projection
+- Dedicated ServiceAccount
+- Disabled ServiceAccount token mounting
+- Disabled Kubernetes Service links
+- Least-privilege generated RBAC
+- No Secret read permissions
 - Unit-tested resource builders
+- Fake-client reconciliation tests
+- Managed-resource ownership tests
+- Drift-correction tests
+- Deleted-resource recreation tests
+- Idempotency tests
+- Core reconciliation documentation
+- Managed-resource ownership architecture decision record
+
+This milestone intentionally does not update `TrussiumRuntime.status` or emit
+Kubernetes Events.
 
 ---
 
@@ -349,8 +381,18 @@ Compatibility will be tracked by operator and runtime release:
 
 ## Immediate Priority
 
-The next priority after the foundation is merged is:
+The next priority is:
 
-1. Define the `TrussiumRuntime v1alpha1` API.
+1. Implement `TrussiumRuntime` status and Kubernetes Events.
 
-The API must be reviewed before Deployment reconciliation begins.
+The next milestone will add:
+
+- `observedGeneration`
+- Ready replica count
+- Available replica count
+- Current runtime image
+- Runtime Service endpoint
+- Standard Kubernetes conditions
+- Stable condition reasons
+- Reconciliation Events
+- Missing-reference and Deployment failure reporting
