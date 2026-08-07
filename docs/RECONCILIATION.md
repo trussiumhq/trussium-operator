@@ -171,11 +171,11 @@ The managed Deployment:
 
 Tag-based image example:
 
-    ghcr.io/trussium/trussium:v0.23.0
+    ghcr.io/trussiumhq/trussium:v0.23.0
 
 Digest-based image example:
 
-    ghcr.io/trussium/trussium@sha256:<digest>
+    ghcr.io/trussiumhq/trussium@sha256:<digest>
 
 ## Ownership and Drift Correction
 

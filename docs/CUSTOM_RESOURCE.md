@@ -26,7 +26,7 @@ metadata:
   namespace: trussium
 spec:
   image:
-    repository: ghcr.io/trussium/trussium
+    repository: ghcr.io/trussiumhq/trussium
     tag: v0.1.0
 
   provider:
@@ -49,6 +49,56 @@ spec:
     port: 9000
 ```
 
+### `podMetadata`
+
+Optional additional metadata applied to the runtime Pod template.
+
+Example:
+
+    podMetadata:
+      labels:
+        team: ai-platform
+      annotations:
+        example.com/owner: inference
+
+Supported fields:
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `labels` | map[string]string | No | Additional Pod labels |
+| `annotations` | map[string]string | No | Additional Pod annotations |
+
+Operator-owned labels cannot be overridden.
+
+These reserved labels maintain workload identity, selectors, and ownership.
+
+### `scheduling`
+
+Optional Kubernetes scheduling controls for runtime Pods.
+
+Example:
+
+    scheduling:
+      nodeSelector:
+        workload: ai
+
+      tolerations:
+        - key: workload
+          operator: Equal
+          value: ai
+          effect: NoSchedule
+
+Supported fields:
+
+| Field | Type | Required | Description |
+|---|---|---|---|
+| `nodeSelector` | map[string]string | No | Required node labels |
+| `tolerations` | Kubernetes toleration list | No | Supported taint tolerations |
+| `affinity` | Kubernetes Affinity | No | Node, Pod affinity and anti-affinity |
+
+The operator's default topology-spread configuration remains active regardless
+of these settings.
+
 ## Specification
 
 ### `spec.image`
@@ -68,7 +118,7 @@ Tag example:
 
 ```yaml
 image:
-  repository: ghcr.io/trussium/trussium
+  repository: ghcr.io/trussiumhq/trussium
   tag: v0.10.0
 ```
 
@@ -76,7 +126,7 @@ Digest example:
 
 ```yaml
 image:
-  repository: ghcr.io/trussium/trussium
+  repository: ghcr.io/trussiumhq/trussium
   digest: sha256:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef
 ```
 
@@ -201,7 +251,7 @@ status:
   observedGeneration: 3
   readyReplicas: 2
   availableReplicas: 2
-  currentImage: ghcr.io/trussium/trussium:v0.10.0
+  currentImage: ghcr.io/trussiumhq/trussium:v0.10.0
   endpoint: http://private-ai.trussium.svc.cluster.local:9000
   conditions:
     - type: Ready
@@ -245,3 +295,24 @@ This milestone defines only the API contract.
 
 ConfigMap, ServiceAccount, Service, Deployment, and status reconciliation will
 be introduced through separate issues.
+
+## PodDisruptionBudget Reconciliation
+
+Each `TrussiumRuntime` owns one `policy/v1` PodDisruptionBudget with the same
+name and namespace as the runtime resource.
+
+The controller manages:
+
+- Stable labels
+- Runtime selector
+- `maxUnavailable: 1`
+- Controller owner reference
+
+Drift is corrected through normal create-or-update reconciliation.
+
+Deletion of the PodDisruptionBudget triggers reconciliation through the owned
+resource watch and the resource is recreated while the `TrussiumRuntime`
+continues to exist.
+
+The PodDisruptionBudget is deleted through Kubernetes owner-reference garbage
+collection when the `TrussiumRuntime` is deleted.

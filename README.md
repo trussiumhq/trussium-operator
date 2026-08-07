@@ -6,10 +6,10 @@ The Trussium Operator is the Kubernetes-native lifecycle manager for
 It provides a declarative Kubernetes API for deploying, configuring, upgrading,
 and observing released Trussium runtime containers.
 
-> **Project status:** Pre-alpha. The initial `TrussiumRuntime v1alpha1` API,
-> core workload reconciliation, runtime status, Secret-reference validation,
-> and Kubernetes Events are implemented. Production workload hardening is the
-> next milestone.
+> **Project status:** Production workload hardening is implemented, including health probes,
+> non-root execution, secure container defaults, graceful termination,
+> zero-unavailable rolling updates, topology spreading, PodDisruptionBudget
+> management, and constrained scheduling customization.
 
 ## Architecture
 
@@ -27,7 +27,7 @@ and observing released Trussium runtime containers.
                  └── emits Kubernetes Events
                              │
                              ▼
-           ghcr.io/trussium/trussium:<version>
+           ghcr.io/trussiumhq/trussium:<version>
 
 The operator does not contain or compile the Trussium Python runtime. It
 consumes released runtime container images and manages their Kubernetes
@@ -51,7 +51,7 @@ Example:
       namespace: trussium
     spec:
       image:
-        repository: ghcr.io/trussium/trussium
+        repository: ghcr.io/trussiumhq/trussium
         tag: v0.23.0
 
       provider:
@@ -70,6 +70,7 @@ For every `TrussiumRuntime`, the operator manages:
 - ServiceAccount
 - Service
 - Deployment
+- PodDisruptionBudget
 
 The controller uses stable labels, controller owner references, deterministic
 resource names, and create-or-update reconciliation.
@@ -124,6 +125,30 @@ The public [`trussium`](https://github.com/trussium/trussium) repository owns:
 - Runtime configuration semantics
 - Runtime container images
 - Runtime package and container releases
+
+## Production Workload Contract
+
+Managed runtime Pods include:
+
+- Startup, liveness, and readiness probes
+- Numeric non-root execution
+- RuntimeDefault seccomp
+- Read-only root filesystem
+- Disabled privilege escalation
+- Dropped Linux capabilities
+- Graceful Kubernetes termination
+- Zero-unavailable rolling updates
+- Topology spreading
+- PodDisruptionBudget protection
+
+Supported Pod customization includes:
+
+- Additional metadata
+- Node selectors
+- Tolerations
+- Affinity
+
+See [docs/PRODUCTION_RUNTIME.md](docs/PRODUCTION_RUNTIME.md).
 
 ## Technology
 

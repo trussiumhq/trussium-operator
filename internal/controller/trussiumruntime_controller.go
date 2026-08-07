@@ -36,6 +36,7 @@ import (
 	"sigs.k8s.io/controller-runtime/pkg/reconcile"
 
 	runtimev1alpha1 "github.com/trussiumhq/trussium-operator/api/v1alpha1"
+	policyv1 "k8s.io/api/policy/v1"
 )
 
 // TrussiumRuntimeReconciler reconciles a TrussiumRuntime resource.
@@ -51,6 +52,7 @@ type TrussiumRuntimeReconciler struct {
 // +kubebuilder:rbac:groups="",resources=secrets,verbs=get;list;watch
 // +kubebuilder:rbac:groups=apps,resources=deployments,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=events.k8s.io,resources=events,verbs=create;patch
+// +kubebuilder:rbac:groups=policy,resources=poddisruptionbudgets,verbs=get;list;watch;create;update;patch;delete
 
 // Reconcile ensures that the Kubernetes resources and observed status owned by
 // a TrussiumRuntime match the custom-resource specification.
@@ -250,6 +252,18 @@ func (r *TrussiumRuntimeReconciler) reconcileCoreResources(
 	); err != nil {
 		return fmt.Errorf(
 			"reconcile Deployment %s/%s: %w",
+			runtimeResource.Namespace,
+			runtimeResource.Name,
+			err,
+		)
+	}
+
+	if err := r.reconcilePodDisruptionBudget(
+		ctx,
+		runtimeResource,
+	); err != nil {
+		return fmt.Errorf(
+			"reconcile PodDisruptionBudget %s/%s: %w",
 			runtimeResource.Namespace,
 			runtimeResource.Name,
 			err,
@@ -506,6 +520,7 @@ func (r *TrussiumRuntimeReconciler) SetupWithManager(
 		Owns(&corev1.ServiceAccount{}).
 		Owns(&corev1.Service{}).
 		Owns(&appsv1.Deployment{}).
+		Owns(&policyv1.PodDisruptionBudget{}).
 		Watches(
 			&corev1.Secret{},
 			handler.EnqueueRequestsFromMapFunc(
@@ -514,4 +529,36 @@ func (r *TrussiumRuntimeReconciler) SetupWithManager(
 		).
 		Named("trussiumruntime").
 		Complete(r)
+}
+
+func (r *TrussiumRuntimeReconciler) reconcilePodDisruptionBudget(
+	ctx context.Context,
+	runtimeResource *runtimev1alpha1.TrussiumRuntime,
+) error {
+	desired := buildPodDisruptionBudget(runtimeResource)
+
+	current := &policyv1.PodDisruptionBudget{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      desired.Name,
+			Namespace: desired.Namespace,
+		},
+	}
+
+	_, err := controllerutil.CreateOrUpdate(
+		ctx,
+		r.Client,
+		current,
+		func() error {
+			current.Labels = desired.Labels
+			current.Spec = desired.Spec
+
+			return controllerutil.SetControllerReference(
+				runtimeResource,
+				current,
+				r.Scheme,
+			)
+		},
+	)
+
+	return err
 }

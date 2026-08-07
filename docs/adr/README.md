@@ -17,3 +17,4 @@ boundaries for the Trussium Operator.
 - [0003 — Define the TrussiumRuntime v1alpha1 API](0003-define-trussiumruntime-v1alpha1-api.md)
 - [0004 — Use Owner References for Managed Resources](0004-use-owner-references-for-managed-resources.md)
 - [0005 — Use Status Conditions and Transition Events](0005-use-status-conditions-and-transition-events.md)
+- [0006 — Enforce a Production Runtime Workload Contract](0006-enforce-production-runtime-workload-contract.md)

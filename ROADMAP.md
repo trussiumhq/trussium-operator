@@ -12,27 +12,36 @@ through GitHub Issues.
 
 ## Current Focus
 
-Kubernetes-native `TrussiumRuntime` status and Events have been implemented.
+The production Kubernetes deployment contract for `TrussiumRuntime` workloads
+has been implemented.
 
-The controller now reports:
+The operator now manages production-oriented runtime Deployments with:
 
-- Processed custom-resource generation
-- Ready and available runtime replicas
-- Current runtime image
-- Internal Service endpoint
-- Configuration validity
-- Deployment progress
-- Runtime readiness and availability
-- Degraded state
+- Startup, liveness, and readiness probes
+- Numeric non-root execution
+- `RuntimeDefault` seccomp
+- Read-only root filesystem
+- Disabled privilege escalation
+- Dropped Linux capabilities
+- Graceful shutdown-aware termination timing
+- Zero-unavailable rolling updates
+- Limited Deployment revision history
+- Hostname topology spreading
+- Managed PodDisruptionBudgets
+- Additional Pod labels and annotations
+- Node selectors
+- Tolerations
+- Affinity configuration
 
-Referenced provider and image-pull Secrets are validated for existence without
-reading their values.
+The operator continues to preserve its existing security boundaries:
 
-The controller watches referenced Secrets and emits transition-based
-`events.k8s.io/v1` Events without producing duplicate Events during unchanged
-reconciliation.
+- No direct Pod permissions
+- No Secret mutation permissions
+- No arbitrary PodSpec exposure
+- No privileged runtime configuration
+- No ServiceAccount token mounting for runtime workloads
 
-The next priority is the production runtime deployment contract.
+The next priority is the runtime upgrade lifecycle and compatibility contract.
 
 ---
 
@@ -80,16 +89,15 @@ architectural boundaries.
 - Branch-protection guidance
 - Conventional Commit workflow
 
-
 ---
 
 ## Milestone O2 — TrussiumRuntime API
 
-**Status:** 🗓 Planned
+**Status:** ✅ Completed
 
 Define the first Kubernetes API for declaring a Trussium runtime instance.
 
-### Deliverables
+### Delivered
 
 - `runtime.trussium.io/v1alpha1`
 - Namespaced `TrussiumRuntime` resource
@@ -122,7 +130,7 @@ Define the first Kubernetes API for declaring a Trussium runtime instance.
 - Service type and port
 - Resource requests and limits
 
-Provider credentials will never be embedded directly in custom resources.
+Provider credentials are never embedded directly in custom resources.
 
 ---
 
@@ -177,8 +185,8 @@ Reconcile a functional Trussium runtime from a `TrussiumRuntime` resource.
 - Core reconciliation documentation
 - Managed-resource ownership architecture decision record
 
-This milestone intentionally does not update `TrussiumRuntime.status` or emit
-Kubernetes Events.
+Status reporting and Kubernetes Events were intentionally deferred to the next
+milestone and subsequently implemented in Milestone O4.
 
 ---
 
@@ -247,30 +255,71 @@ The controller never reads, logs, copies, or exposes Secret values.
 
 ## Milestone O5 — Production Deployment Contract
 
-**Status:** 🗓 Planned
+**Status:** ✅ Completed
 
-Reach parity with the production Kubernetes contract validated by the public
-Trussium runtime repository.
+Reach parity with the production Kubernetes workload contract maintained by the
+public Trussium runtime repository while preserving a constrained and secure
+operator API.
 
-### Deliverables
+### Delivered
 
-- Startup probe
-- Liveness probe
-- Readiness probe
-- Non-root container execution
-- Read-only root filesystem support
+- Runtime startup probe
+- Runtime liveness probe
+- Runtime readiness probe
+- Named `http` probe port
+- Numeric runtime UID `10001`
+- Numeric runtime GID `10001`
+- Non-root execution enforcement
+- `RuntimeDefault` seccomp profile
+- Read-only root filesystem
+- Disabled privilege escalation
 - Dropped Linux capabilities
-- No-new-privileges support
-- Graceful termination timing
-- Provider Secret references
-- Image-pull Secret references
-- PodDisruptionBudget
-- Topology spreading
-- Zero-unavailable rolling updates
-- Pod labels and annotations
-- Node selector
-- Tolerations
-- Affinity configuration
+- Non-privileged runtime container
+- Disabled ServiceAccount token mounting
+- Disabled Kubernetes Service links
+- Graceful shutdown-aware Kubernetes termination
+- Default 36-second termination grace period
+- Configured drain timeout plus six-second Kubernetes safety margin
+- RollingUpdate Deployment strategy
+- Zero `maxUnavailable`
+- One-replica `maxSurge`
+- Deployment revision-history limit
+- Hostname topology spreading
+- Stable topology selector labels
+- Managed `policy/v1` PodDisruptionBudget
+- `maxUnavailable: 1` disruption policy
+- PodDisruptionBudget controller ownership
+- PodDisruptionBudget drift correction
+- Deleted PodDisruptionBudget recreation
+- PodDisruptionBudget owned-resource watch
+- PodDisruptionBudget RBAC
+- Additional runtime Pod labels
+- Additional runtime Pod annotations
+- Reserved operator-label protection
+- Node selector support
+- Toleration support
+- Affinity support
+- Additive `v1alpha1` API extension
+- Kubernetes-native scheduling structures
+- Production workload builder tests
+- Probe contract tests
+- Security-context tests
+- Graceful-termination tests
+- Rolling-update tests
+- Topology-spread tests
+- Pod metadata projection tests
+- Scheduling projection tests
+- PodDisruptionBudget builder tests
+- PodDisruptionBudget reconciliation tests
+- PodDisruptionBudget drift tests
+- PodDisruptionBudget recreation tests
+- API JSON round-trip tests
+- Production workload documentation
+- Production workload architecture decision record
+- Canonical runtime image references updated to `ghcr.io/trussiumhq/trussium`
+
+The operator does not expose an unrestricted Kubernetes `PodSpec`. Production
+security and health invariants remain operator-controlled.
 
 ---
 
@@ -278,21 +327,33 @@ Trussium runtime repository.
 
 **Status:** 🗓 Planned
 
-Provide predictable runtime configuration and image upgrades.
+Provide predictable runtime configuration and image upgrades with explicit
+observability and compatibility boundaries.
 
 ### Deliverables
 
-- Immutable image-tag support
-- Image-digest support
+- Explicit desired runtime version reporting
+- Explicit current runtime version reporting
+- Runtime image transition observation
+- Upgrade-in-progress condition
+- Upgrade-complete condition
+- Upgrade-failed condition
+- Stable upgrade condition reasons
+- Upgrade lifecycle Events
 - Deployment rollout monitoring
+- Failed rollout detection
+- Upgrade completion detection
 - Configuration checksum annotations
 - Configuration-triggered rollouts
-- Current and desired version reporting
-- Failed rollout conditions
+- Safe image transition behaviour
 - Manual drift recovery
 - Upgrade documentation
 - Rollback documentation
+- Operator/runtime compatibility documentation
 - Runtime compatibility matrix
+
+The upgrade lifecycle will build on Deployment status rather than introducing
+direct Pod reads.
 
 ---
 
@@ -306,17 +367,22 @@ Validate the controller against Kubernetes API machinery and real clusters.
 
 - envtest integration suite
 - CRD installation tests
+- Controller-manager integration tests
 - Reconciliation tests
 - Managed-resource ownership tests
 - Update tests
 - Status tests
 - Deletion tests
 - Missing-reference tests
+- Secret-reference recovery tests
+- PodDisruptionBudget integration tests
+- Upgrade lifecycle tests
 - Kind-cluster tests
 - Operator installation test
 - Runtime Deployment readiness test
 - Runtime health endpoint validation
 - Runtime configuration rollout test
+- Runtime image upgrade test
 - Owned-resource garbage-collection test
 
 ---
@@ -330,7 +396,8 @@ Make the operator independently installable and releasable.
 ### Deliverables
 
 - Production operator container
-- Numeric non-root runtime identity
+- Numeric non-root operator identity
+- Hardened operator container security context
 - Multi-platform AMD64 and ARM64 image
 - GitHub Container Registry publication
 - Software bill of materials
@@ -349,8 +416,8 @@ Make the operator independently installable and releasable.
 
 **Status:** 🗓 Planned
 
-Add operational features after the core API and reconciliation contracts are
-stable.
+Add operational features after the core API, reconciliation, upgrade, and
+packaging contracts are stable.
 
 ### Potential Deliverables
 
@@ -407,39 +474,46 @@ control plane.
 The operator consumes released Trussium runtime images:
 
 ```text
-ghcr.io/trussium/trussium:<version>
+ghcr.io/trussiumhq/trussium:<version>
 ```
 
 It does not import, compile, or duplicate runtime source code.
+
+The operator manages Kubernetes lifecycle while the runtime repository remains
+authoritative for:
+
+- Runtime process behaviour
+- Runtime APIs
+- Provider integrations
+- Health endpoint semantics
+- Runtime configuration semantics
+- Runtime container releases
 
 Compatibility will be tracked by operator and runtime release:
 
 | Operator version | Supported Trussium versions |
 |---|---|
-| Pre-release | To be established during the first end-to-end release |
+| Pre-release | To be established during the upgrade and end-to-end milestones |
 
 ---
 
 ## Immediate Priority
 
-The next priority is:
+The next priority is Milestone O6:
 
-1. Implement the production runtime deployment contract.
+1. Define the runtime upgrade lifecycle and compatibility contract.
 
-The next milestone will add:
+The next milestone will focus on:
 
-- Startup probe
-- Liveness probe
-- Readiness probe
-- Non-root runtime execution
-- Read-only root filesystem support
-- Dropped Linux capabilities
-- No-new-privileges support
-- Graceful termination timing
-- PodDisruptionBudget
-- Topology spreading
-- Zero-unavailable rolling updates
-- Pod labels and annotations
-- Node selector
-- Tolerations
-- Affinity configuration
+- Explicit desired and current runtime version reporting
+- Upgrade-state conditions
+- Upgrade lifecycle Events
+- Deployment rollout monitoring
+- Rollout failure handling
+- Upgrade completion detection
+- Configuration-triggered rollouts
+- Safe runtime image transitions
+- Operator/runtime compatibility boundaries
+- Upgrade documentation
+- Rollback documentation
+- Compatibility matrix foundations

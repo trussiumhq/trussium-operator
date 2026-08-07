@@ -65,7 +65,7 @@ type SecretKeyReference struct {
 type RuntimeImageSpec struct {
 	// Repository is the container image repository without a tag or digest.
 	//
-	// Example: ghcr.io/trussium/trussium
+	// Example: ghcr.io/trussiumhq/trussium
 	// +kubebuilder:validation:Required
 	// +kubebuilder:validation:MinLength=1
 	// +kubebuilder:validation:MaxLength=255
@@ -165,6 +165,34 @@ type RuntimeServiceSpec struct {
 	Port int32 `json:"port,omitempty"`
 }
 
+// PodMetadataSpec defines additional metadata applied to runtime Pods.
+type PodMetadataSpec struct {
+	// Labels are additional labels applied to the runtime Pod template.
+	//
+	// Operator-owned identity labels cannot be overridden.
+	// +optional
+	Labels map[string]string `json:"labels,omitempty"`
+
+	// Annotations are additional annotations applied to the runtime Pod template.
+	// +optional
+	Annotations map[string]string `json:"annotations,omitempty"`
+}
+
+// SchedulingSpec defines supported Kubernetes scheduling controls.
+type SchedulingSpec struct {
+	// NodeSelector constrains runtime Pods to nodes matching these labels.
+	// +optional
+	NodeSelector map[string]string `json:"nodeSelector,omitempty"`
+
+	// Tolerations configure Pod scheduling onto tainted nodes.
+	// +optional
+	Tolerations []corev1.Toleration `json:"tolerations,omitempty"`
+
+	// Affinity configures Pod affinity, anti-affinity, and node affinity.
+	// +optional
+	Affinity *corev1.Affinity `json:"affinity,omitempty"`
+}
+
 // TrussiumRuntimeSpec defines the desired state of a Trussium runtime.
 type TrussiumRuntimeSpec struct {
 	// Image selects the released Trussium runtime container image.
@@ -203,6 +231,14 @@ type TrussiumRuntimeSpec struct {
 	// Resources defines runtime-container compute resource requirements.
 	// +optional
 	Resources corev1.ResourceRequirements `json:"resources,omitempty"`
+
+	// PodMetadata defines additional labels and annotations applied to runtime Pods.
+	// +optional
+	PodMetadata *PodMetadataSpec `json:"podMetadata,omitempty"`
+
+	// Scheduling defines supported Kubernetes scheduling controls.
+	// +optional
+	Scheduling *SchedulingSpec `json:"scheduling,omitempty"`
 }
 
 // TrussiumRuntimeStatus defines the observed state of a Trussium runtime.
