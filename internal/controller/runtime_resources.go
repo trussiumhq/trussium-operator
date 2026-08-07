@@ -17,6 +17,7 @@ limitations under the License.
 package controller
 
 import (
+	"maps"
 	"strconv"
 
 	appsv1 "k8s.io/api/apps/v1"
@@ -26,12 +27,23 @@ import (
 	"k8s.io/utils/ptr"
 
 	runtimev1alpha1 "github.com/trussiumhq/trussium-operator/api/v1alpha1"
+	policyv1 "k8s.io/api/policy/v1"
 )
 
 const (
 	runtimeContainerName = "trussium"
 	runtimeHTTPPortName  = "http"
 	runtimeHTTPPort      = int32(9000)
+
+	runtimeUserID                  = int64(10001)
+	runtimeGroupID                 = int64(10001)
+	defaultShutdownDrainSeconds    = int32(30)
+	terminationGraceMarginSeconds  = int64(6)
+	defaultTerminationGraceSeconds = int64(36)
+	deploymentRevisionHistoryLimit = int32(3)
+	topologyHostnameKey            = "kubernetes.io/hostname"
+	healthLivePath                 = "/health/live"
+	healthReadyPath                = "/health/ready"
 
 	envEnvironment             = "TRUSSIUM_ENVIRONMENT"
 	envRuntimeHost             = "TRUSSIUM_RUNTIME__HOST"
@@ -122,6 +134,91 @@ func desiredServicePort(
 	}
 
 	return runtimeResource.Spec.Service.Port
+}
+
+func terminationGracePeriodSeconds(
+	runtimeResource *runtimev1alpha1.TrussiumRuntime,
+) int64 {
+	if runtimeResource.Spec.Runtime == nil ||
+		runtimeResource.Spec.Runtime.ShutdownDrainTimeoutSeconds == nil {
+		return defaultTerminationGraceSeconds
+	}
+
+	return int64(
+		*runtimeResource.Spec.Runtime.ShutdownDrainTimeoutSeconds,
+	) + terminationGraceMarginSeconds
+}
+
+func mergedPodLabels(
+	runtimeResource *runtimev1alpha1.TrussiumRuntime,
+) map[string]string {
+	labels := runtimeLabels(runtimeResource)
+
+	if runtimeResource.Spec.PodMetadata == nil {
+		return labels
+	}
+
+	for key, value := range runtimeResource.Spec.PodMetadata.Labels {
+		if _, reserved := labels[key]; reserved {
+			continue
+		}
+
+		labels[key] = value
+	}
+
+	return labels
+}
+
+func podAnnotations(
+	runtimeResource *runtimev1alpha1.TrussiumRuntime,
+) map[string]string {
+	if runtimeResource.Spec.PodMetadata == nil ||
+		len(runtimeResource.Spec.PodMetadata.Annotations) == 0 {
+		return nil
+	}
+
+	annotations := make(
+		map[string]string,
+		len(runtimeResource.Spec.PodMetadata.Annotations),
+	)
+
+	maps.Copy(
+		annotations,
+		runtimeResource.Spec.PodMetadata.Annotations,
+	)
+
+	return annotations
+}
+
+func runtimeNodeSelector(
+	runtimeResource *runtimev1alpha1.TrussiumRuntime,
+) map[string]string {
+	if runtimeResource.Spec.Scheduling == nil {
+		return nil
+	}
+
+	return runtimeResource.Spec.Scheduling.NodeSelector
+}
+
+func runtimeTolerations(
+	runtimeResource *runtimev1alpha1.TrussiumRuntime,
+) []corev1.Toleration {
+	if runtimeResource.Spec.Scheduling == nil {
+		return nil
+	}
+
+	return runtimeResource.Spec.Scheduling.Tolerations
+}
+
+func runtimeAffinity(
+	runtimeResource *runtimev1alpha1.TrussiumRuntime,
+) *corev1.Affinity {
+	if runtimeResource.Spec.Scheduling == nil ||
+		runtimeResource.Spec.Scheduling.Affinity == nil {
+		return nil
+	}
+
+	return runtimeResource.Spec.Scheduling.Affinity.DeepCopy()
 }
 
 // imagePullSecrets converts API references to Kubernetes local references.
@@ -268,6 +365,10 @@ func buildDeployment(
 ) *appsv1.Deployment {
 	labels := runtimeLabels(runtimeResource)
 	selectorLabels := runtimeSelectorLabels(runtimeResource)
+	podLabels := mergedPodLabels(runtimeResource)
+
+	maxUnavailable := intstr.FromInt32(0)
+	maxSurge := intstr.FromInt32(1)
 
 	return &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
@@ -280,20 +381,81 @@ func buildDeployment(
 			Selector: &metav1.LabelSelector{
 				MatchLabels: selectorLabels,
 			},
+			RevisionHistoryLimit: ptr.To(
+				deploymentRevisionHistoryLimit,
+			),
+			Strategy: appsv1.DeploymentStrategy{
+				Type: appsv1.RollingUpdateDeploymentStrategyType,
+				RollingUpdate: &appsv1.RollingUpdateDeployment{
+					MaxUnavailable: &maxUnavailable,
+					MaxSurge:       &maxSurge,
+				},
+			},
 			Template: corev1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
-					Labels: labels,
+					Labels:      podLabels,
+					Annotations: podAnnotations(runtimeResource),
 				},
 				Spec: corev1.PodSpec{
-					ServiceAccountName:           runtimeResource.Name,
+					ServiceAccountName: runtimeResource.Name,
+
 					AutomountServiceAccountToken: ptr.To(false),
 					EnableServiceLinks:           ptr.To(false),
-					ImagePullSecrets:             imagePullSecrets(runtimeResource),
+
+					TerminationGracePeriodSeconds: ptr.To(
+						terminationGracePeriodSeconds(
+							runtimeResource,
+						),
+					),
+
+					SecurityContext: &corev1.PodSecurityContext{
+						RunAsNonRoot: ptr.To(true),
+						RunAsUser:    ptr.To(runtimeUserID),
+						RunAsGroup:   ptr.To(runtimeGroupID),
+						SeccompProfile: &corev1.SeccompProfile{
+							Type: corev1.SeccompProfileTypeRuntimeDefault,
+						},
+					},
+
+					ImagePullSecrets: imagePullSecrets(
+						runtimeResource,
+					),
+
+					NodeSelector: runtimeNodeSelector(
+						runtimeResource,
+					),
+					Tolerations: runtimeTolerations(
+						runtimeResource,
+					),
+					Affinity: runtimeAffinity(
+						runtimeResource,
+					),
+
+					TopologySpreadConstraints: []corev1.TopologySpreadConstraint{
+						{
+							MaxSkew:           1,
+							TopologyKey:       topologyHostnameKey,
+							WhenUnsatisfiable: corev1.ScheduleAnyway,
+							LabelSelector: &metav1.LabelSelector{
+								MatchLabels: selectorLabels,
+							},
+						},
+					},
+
 					Containers: []corev1.Container{
 						{
 							Name:            runtimeContainerName,
 							Image:           runtimeImage(runtimeResource.Spec.Image),
 							ImagePullPolicy: runtimeResource.Spec.Image.PullPolicy,
+
+							SecurityContext: &corev1.SecurityContext{
+								AllowPrivilegeEscalation: ptr.To(false),
+								ReadOnlyRootFilesystem:   ptr.To(true),
+								Capabilities: &corev1.Capabilities{
+									Drop: []corev1.Capability{"ALL"},
+								},
+							},
+
 							Ports: []corev1.ContainerPort{
 								{
 									Name:          runtimeHTTPPortName,
@@ -301,6 +463,49 @@ func buildDeployment(
 									Protocol:      corev1.ProtocolTCP,
 								},
 							},
+
+							StartupProbe: &corev1.Probe{
+								ProbeHandler: corev1.ProbeHandler{
+									HTTPGet: &corev1.HTTPGetAction{
+										Path: healthLivePath,
+										Port: intstr.FromString(
+											runtimeHTTPPortName,
+										),
+									},
+								},
+								PeriodSeconds:    2,
+								TimeoutSeconds:   1,
+								FailureThreshold: 30,
+							},
+
+							LivenessProbe: &corev1.Probe{
+								ProbeHandler: corev1.ProbeHandler{
+									HTTPGet: &corev1.HTTPGetAction{
+										Path: healthLivePath,
+										Port: intstr.FromString(
+											runtimeHTTPPortName,
+										),
+									},
+								},
+								PeriodSeconds:    10,
+								TimeoutSeconds:   2,
+								FailureThreshold: 3,
+							},
+
+							ReadinessProbe: &corev1.Probe{
+								ProbeHandler: corev1.ProbeHandler{
+									HTTPGet: &corev1.HTTPGetAction{
+										Path: healthReadyPath,
+										Port: intstr.FromString(
+											runtimeHTTPPortName,
+										),
+									},
+								},
+								PeriodSeconds:    5,
+								TimeoutSeconds:   2,
+								FailureThreshold: 3,
+							},
+
 							EnvFrom: []corev1.EnvFromSource{
 								{
 									ConfigMapRef: &corev1.ConfigMapEnvSource{
@@ -310,11 +515,35 @@ func buildDeployment(
 									},
 								},
 							},
-							Env:       providerCredentialEnv(runtimeResource),
+
+							Env: providerCredentialEnv(
+								runtimeResource,
+							),
+
 							Resources: *runtimeResource.Spec.Resources.DeepCopy(),
 						},
 					},
 				},
+			},
+		},
+	}
+}
+
+func buildPodDisruptionBudget(
+	runtimeResource *runtimev1alpha1.TrussiumRuntime,
+) *policyv1.PodDisruptionBudget {
+	maxUnavailable := intstr.FromInt32(1)
+
+	return &policyv1.PodDisruptionBudget{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      runtimeResource.Name,
+			Namespace: runtimeResource.Namespace,
+			Labels:    runtimeLabels(runtimeResource),
+		},
+		Spec: policyv1.PodDisruptionBudgetSpec{
+			MaxUnavailable: &maxUnavailable,
+			Selector: &metav1.LabelSelector{
+				MatchLabels: runtimeSelectorLabels(runtimeResource),
 			},
 		},
 	}

@@ -96,7 +96,7 @@ func TestTrussiumRuntimeJSONRoundTrip(t *testing.T) {
 		},
 		Spec: TrussiumRuntimeSpec{
 			Image: RuntimeImageSpec{
-				Repository: "ghcr.io/trussium/trussium",
+				Repository: "ghcr.io/trussiumhq/trussium",
 				Tag:        &tag,
 				PullPolicy: corev1.PullIfNotPresent,
 			},
@@ -124,7 +124,7 @@ func TestTrussiumRuntimeJSONRoundTrip(t *testing.T) {
 			ObservedGeneration: 4,
 			ReadyReplicas:      2,
 			AvailableReplicas:  2,
-			CurrentImage:       "ghcr.io/trussium/trussium:v0.10.0",
+			CurrentImage:       "ghcr.io/trussiumhq/trussium:v0.10.0",
 			Endpoint:           "http://production.trussium.svc.cluster.local:9000",
 		},
 	}

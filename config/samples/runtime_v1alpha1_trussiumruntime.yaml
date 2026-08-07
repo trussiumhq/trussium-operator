@@ -1,12 +1,15 @@
 apiVersion: runtime.trussium.io/v1alpha1
 kind: TrussiumRuntime
 metadata:
-  name: trussiumruntime-sample
-  namespace: default
+  name: private-ai
+  namespace: trussium
 spec:
   image:
-    repository: ghcr.io/trussium/trussium
-    tag: v0.1.0
+    repository: ghcr.io/trussiumhq/trussium
+    tag: v0.23.0
+    pullPolicy: IfNotPresent
+
+  replicas: 2
 
   provider:
     type: ollama
@@ -14,14 +17,23 @@ spec:
     baseURL: http://ollama.ollama.svc.cluster.local:11434/v1
 
   runtime:
-    providerRequestTimeoutSeconds: 60
-    streamIdleTimeoutSeconds: 30
-    shutdownDrainTimeoutSeconds: 45
+    shutdownDrainTimeoutSeconds: 30
 
-  resources:
-    requests:
-      cpu: 250m
-      memory: 256Mi
-    limits:
-      cpu: "1"
-      memory: 1Gi
+  service:
+    type: ClusterIP
+    port: 9000
+
+  podMetadata:
+    labels:
+      team: ai-platform
+    annotations:
+      example.com/owner: inference
+
+  scheduling:
+    nodeSelector:
+      workload: ai
+    tolerations:
+      - key: workload
+        operator: Equal
+        value: ai
+        effect: NoSchedule

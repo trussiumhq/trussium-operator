@@ -23,11 +23,14 @@ import (
 
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	policyv1 "k8s.io/api/policy/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/client-go/tools/events"
+	"k8s.io/utils/ptr"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/client/fake"
@@ -290,15 +293,22 @@ func newTestScheme(t *testing.T) *runtime.Scheme {
 	scheme := runtime.NewScheme()
 
 	if err := corev1.AddToScheme(scheme); err != nil {
-		t.Fatalf("register core Kubernetes API: %v", err)
+		t.Fatalf("register core/v1 Kubernetes API: %v", err)
 	}
 
 	if err := appsv1.AddToScheme(scheme); err != nil {
-		t.Fatalf("register apps Kubernetes API: %v", err)
+		t.Fatalf("register apps/v1 Kubernetes API: %v", err)
+	}
+
+	if err := policyv1.AddToScheme(scheme); err != nil {
+		t.Fatalf("register policy/v1 Kubernetes API: %v", err)
 	}
 
 	if err := runtimev1alpha1.AddToScheme(scheme); err != nil {
-		t.Fatalf("register TrussiumRuntime API: %v", err)
+		t.Fatalf(
+			"register runtime.trussium.io/v1alpha1 API: %v",
+			err,
+		)
 	}
 
 	return scheme
@@ -754,5 +764,274 @@ func drainRecordedEvents(
 		default:
 			return recordedEvents
 		}
+	}
+}
+
+func TestReconcileCreatesOwnedPodDisruptionBudget(
+	t *testing.T,
+) {
+	ctx := context.Background()
+	scheme := newTestScheme(t)
+
+	runtimeResource := newTestRuntime()
+	runtimeResource.UID =
+		types.UID("runtime-pdb-owner-uid")
+
+	kubernetesClient := fake.NewClientBuilder().
+		WithScheme(scheme).
+		WithStatusSubresource(
+			&runtimev1alpha1.TrussiumRuntime{},
+		).
+		WithObjects(runtimeResource).
+		Build()
+
+	reconciler := TrussiumRuntimeReconciler{
+		Client: kubernetesClient,
+		Scheme: scheme,
+	}
+
+	request := ctrl.Request{
+		NamespacedName: client.ObjectKeyFromObject(runtimeResource),
+	}
+
+	if _, err := reconciler.Reconcile(
+		ctx,
+		request,
+	); err != nil {
+		t.Fatalf(
+			"reconcile TrussiumRuntime: %v",
+			err,
+		)
+	}
+
+	var pdb policyv1.PodDisruptionBudget
+
+	if err := kubernetesClient.Get(
+		ctx,
+		request.NamespacedName,
+		&pdb,
+	); err != nil {
+		t.Fatalf(
+			"get managed PodDisruptionBudget: %v",
+			err,
+		)
+	}
+
+	if pdb.Spec.MaxUnavailable == nil ||
+		pdb.Spec.MaxUnavailable.IntVal != 1 {
+		t.Fatalf(
+			"expected maxUnavailable=1, received %#v",
+			pdb.Spec.MaxUnavailable,
+		)
+	}
+
+	if len(pdb.OwnerReferences) != 1 {
+		t.Fatalf(
+			"expected one owner reference, received %#v",
+			pdb.OwnerReferences,
+		)
+	}
+
+	owner := pdb.OwnerReferences[0]
+
+	if owner.UID != runtimeResource.UID {
+		t.Fatalf(
+			"expected owner UID %q, received %q",
+			runtimeResource.UID,
+			owner.UID,
+		)
+	}
+
+	if owner.Controller == nil || !*owner.Controller {
+		t.Fatal(
+			"expected TrussiumRuntime to be the PDB controller owner",
+		)
+	}
+}
+
+func TestReconcileCorrectsPodDisruptionBudgetDrift(
+	t *testing.T,
+) {
+	ctx := context.Background()
+	scheme := newTestScheme(t)
+
+	runtimeResource := newTestRuntime()
+	runtimeResource.UID =
+		types.UID("runtime-pdb-drift-uid")
+
+	kubernetesClient := fake.NewClientBuilder().
+		WithScheme(scheme).
+		WithStatusSubresource(
+			&runtimev1alpha1.TrussiumRuntime{},
+		).
+		WithObjects(runtimeResource).
+		Build()
+
+	reconciler := TrussiumRuntimeReconciler{
+		Client: kubernetesClient,
+		Scheme: scheme,
+	}
+
+	request := ctrl.Request{
+		NamespacedName: client.ObjectKeyFromObject(runtimeResource),
+	}
+
+	if _, err := reconciler.Reconcile(
+		ctx,
+		request,
+	); err != nil {
+		t.Fatalf(
+			"initial reconciliation: %v",
+			err,
+		)
+	}
+
+	var pdb policyv1.PodDisruptionBudget
+
+	if err := kubernetesClient.Get(
+		ctx,
+		request.NamespacedName,
+		&pdb,
+	); err != nil {
+		t.Fatalf(
+			"get managed PodDisruptionBudget: %v",
+			err,
+		)
+	}
+
+	pdb.Spec.MaxUnavailable =
+		ptr.To(intstr.FromInt32(2))
+
+	if err := kubernetesClient.Update(
+		ctx,
+		&pdb,
+	); err != nil {
+		t.Fatalf(
+			"introduce PodDisruptionBudget drift: %v",
+			err,
+		)
+	}
+
+	if _, err := reconciler.Reconcile(
+		ctx,
+		request,
+	); err != nil {
+		t.Fatalf(
+			"reconcile PodDisruptionBudget drift: %v",
+			err,
+		)
+	}
+
+	var corrected policyv1.PodDisruptionBudget
+
+	if err := kubernetesClient.Get(
+		ctx,
+		request.NamespacedName,
+		&corrected,
+	); err != nil {
+		t.Fatalf(
+			"get corrected PodDisruptionBudget: %v",
+			err,
+		)
+	}
+
+	if corrected.Spec.MaxUnavailable == nil ||
+		corrected.Spec.MaxUnavailable.IntVal != 1 {
+		t.Fatalf(
+			"expected corrected maxUnavailable=1, received %#v",
+			corrected.Spec.MaxUnavailable,
+		)
+	}
+}
+
+func TestReconcileRecreatesDeletedPodDisruptionBudget(
+	t *testing.T,
+) {
+	ctx := context.Background()
+	scheme := newTestScheme(t)
+
+	runtimeResource := newTestRuntime()
+	runtimeResource.UID =
+		types.UID("runtime-pdb-recreate-uid")
+
+	kubernetesClient := fake.NewClientBuilder().
+		WithScheme(scheme).
+		WithStatusSubresource(
+			&runtimev1alpha1.TrussiumRuntime{},
+		).
+		WithObjects(runtimeResource).
+		Build()
+
+	reconciler := TrussiumRuntimeReconciler{
+		Client: kubernetesClient,
+		Scheme: scheme,
+	}
+
+	request := ctrl.Request{
+		NamespacedName: client.ObjectKeyFromObject(runtimeResource),
+	}
+
+	if _, err := reconciler.Reconcile(
+		ctx,
+		request,
+	); err != nil {
+		t.Fatalf(
+			"initial reconciliation: %v",
+			err,
+		)
+	}
+
+	var pdb policyv1.PodDisruptionBudget
+
+	if err := kubernetesClient.Get(
+		ctx,
+		request.NamespacedName,
+		&pdb,
+	); err != nil {
+		t.Fatalf(
+			"get managed PodDisruptionBudget: %v",
+			err,
+		)
+	}
+
+	if err := kubernetesClient.Delete(
+		ctx,
+		&pdb,
+	); err != nil {
+		t.Fatalf(
+			"delete managed PodDisruptionBudget: %v",
+			err,
+		)
+	}
+
+	if _, err := reconciler.Reconcile(
+		ctx,
+		request,
+	); err != nil {
+		t.Fatalf(
+			"reconcile deleted PodDisruptionBudget: %v",
+			err,
+		)
+	}
+
+	var recreated policyv1.PodDisruptionBudget
+
+	if err := kubernetesClient.Get(
+		ctx,
+		request.NamespacedName,
+		&recreated,
+	); err != nil {
+		t.Fatalf(
+			"expected PodDisruptionBudget recreation: %v",
+			err,
+		)
+	}
+
+	if recreated.Spec.MaxUnavailable == nil ||
+		recreated.Spec.MaxUnavailable.IntVal != 1 {
+		t.Fatalf(
+			"unexpected recreated PDB: %#v",
+			recreated.Spec,
+		)
 	}
 }

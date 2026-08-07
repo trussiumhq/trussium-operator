@@ -26,7 +26,7 @@ Example:
       observedGeneration: 4
       readyReplicas: 2
       availableReplicas: 2
-      currentImage: ghcr.io/trussium/trussium:v0.23.0
+      currentImage: ghcr.io/trussiumhq/trussium:v0.23.0
       endpoint: http://private-ai.trussium.svc.cluster.local:9000
       conditions:
         - type: ConfigurationValid

@@ -71,7 +71,7 @@ Python implementation.
 The runtime repository publishes immutable container versions:
 
 ```text
-ghcr.io/trussium/trussium:vX.Y.Z
+ghcr.io/trussiumhq/trussium:vX.Y.Z
 ```
 
 A future `TrussiumRuntime` resource will select one of those versions.

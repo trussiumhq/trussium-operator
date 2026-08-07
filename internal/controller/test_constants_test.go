@@ -17,7 +17,7 @@ limitations under the License.
 package controller
 
 const (
-	testRuntimeRepository        = "ghcr.io/trussium/trussium"
+	testRuntimeRepository        = "ghcr.io/trussiumhq/trussium"
 	testRuntimeTag               = "0.23.0"
 	testRuntimeImage             = testRuntimeRepository + ":" + testRuntimeTag
 	testRuntimeNamespace         = runtimeContainerName
