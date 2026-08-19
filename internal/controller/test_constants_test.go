@@ -20,10 +20,13 @@ const (
 	testRuntimeRepository        = "ghcr.io/trussiumhq/trussium"
 	testRuntimeTag               = "0.23.0"
 	testRuntimeImage             = testRuntimeRepository + ":" + testRuntimeTag
+	testUpgradeRuntimeTag        = "0.24.0"
+	testUpgradeRuntimeImage      = testRuntimeRepository + ":" + testUpgradeRuntimeTag
 	testRuntimeNamespace         = runtimeContainerName
 	testImagePullSecret          = "ghcr-credentials"
 	testProviderCredentialSecret = "provider-credentials"
 	testProviderCredentialKey    = "api-key"
 	testRuntimeEndpoint          = "http://production.trussium.svc.cluster.local:9000"
 	testRuntimeReadyMessage      = "The runtime is ready."
+	testProviderName             = "ollama"
 )

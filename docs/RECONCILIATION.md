@@ -214,6 +214,62 @@ The controller does not currently require:
 - Pod reads
 - PodDisruptionBudget management
 
+## Runtime Upgrade Reconciliation
+
+Runtime image transitions use the existing Deployment reconciliation path.
+
+The controller does not create separate upgrade resources.
+
+After reconciling the desired Deployment, the controller observes Deployment
+status and determines whether the rollout is:
+
+- Waiting for the Deployment controller
+- Progressing
+- Complete
+- Failed
+
+Successful rollout advances:
+
+    status.lastSuccessfulImage
+
+Failed rollout preserves the previous successful image.
+
+The controller never automatically rewrites `spec.image`.
+
+### Deployment Progress Deadline
+
+Managed Deployments use:
+
+    progressDeadlineSeconds: 600
+
+This allows stalled rollouts to surface through the standard Deployment
+`Progressing` condition.
+
+### Configuration Rollout Checksum
+
+Managed runtime configuration is represented in the ConfigMap.
+
+The controller calculates a deterministic SHA-256 checksum of that ConfigMap
+data and projects it onto the Pod template:
+
+    runtime.trussium.io/config-checksum
+
+A runtime configuration change therefore modifies the Pod template and causes
+the Deployment controller to create a new revision.
+
+Secret values are never included in checksum calculation.
+
+### Upgrade Observation Boundary
+
+The controller observes only the Deployment.
+
+It does not require:
+
+- Pod reads
+- ReplicaSet reads
+- Periodic rollout polling
+- Runtime HTTP probes from the controller
+
 ## Current Scope Boundary
 
 This reconciliation milestone does not implement:

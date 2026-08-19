@@ -12,36 +12,31 @@ through GitHub Issues.
 
 ## Current Focus
 
-The production Kubernetes deployment contract for `TrussiumRuntime` workloads
-has been implemented.
+The runtime upgrade lifecycle and compatibility contract have been implemented.
 
-The operator now manages production-oriented runtime Deployments with:
+The operator now provides:
 
-- Startup, liveness, and readiness probes
-- Numeric non-root execution
-- `RuntimeDefault` seccomp
-- Read-only root filesystem
-- Disabled privilege escalation
-- Dropped Linux capabilities
-- Graceful shutdown-aware termination timing
-- Zero-unavailable rolling updates
-- Limited Deployment revision history
-- Hostname topology spreading
-- Managed PodDisruptionBudgets
-- Additional Pod labels and annotations
-- Node selectors
-- Tolerations
-- Affinity configuration
+- Desired runtime image reporting
+- Current Deployment image reporting
+- Last successful runtime image tracking
+- Explicit runtime image upgrade detection
+- `Upgrading` condition
+- Upgrade progress reporting
+- Upgrade completion reporting
+- Upgrade failure reporting
+- Deployment rollout completion detection
+- Deployment progress deadline handling
+- Replica failure handling
+- Scale-to-zero upgrade semantics
+- Deterministic runtime configuration checksums
+- Configuration-triggered Deployment rollouts
+- Runtime upgrade lifecycle Events
+- Pre-release operator/runtime compatibility documentation
 
-The operator continues to preserve its existing security boundaries:
+Upgrade observation remains Kubernetes-native and requires no direct Pod or
+ReplicaSet permissions.
 
-- No direct Pod permissions
-- No Secret mutation permissions
-- No arbitrary PodSpec exposure
-- No privileged runtime configuration
-- No ServiceAccount token mounting for runtime workloads
-
-The next priority is the runtime upgrade lifecycle and compatibility contract.
+The next priority is controller integration and end-to-end testing.
 
 ---
 
@@ -325,35 +320,61 @@ security and health invariants remain operator-controlled.
 
 ## Milestone O6 — Upgrade Lifecycle
 
-**Status:** 🗓 Planned
+**Status:** ✅ Completed
 
 Provide predictable runtime configuration and image upgrades with explicit
 observability and compatibility boundaries.
 
-### Deliverables
+### Delivered
 
-- Explicit desired runtime version reporting
-- Explicit current runtime version reporting
-- Runtime image transition observation
-- Upgrade-in-progress condition
-- Upgrade-complete condition
-- Upgrade-failed condition
-- Stable upgrade condition reasons
-- Upgrade lifecycle Events
-- Deployment rollout monitoring
-- Failed rollout detection
-- Upgrade completion detection
-- Configuration checksum annotations
-- Configuration-triggered rollouts
-- Safe image transition behaviour
-- Manual drift recovery
-- Upgrade documentation
-- Rollback documentation
-- Operator/runtime compatibility documentation
-- Runtime compatibility matrix
+- `status.desiredImage`
+- Existing `status.currentImage` semantics preserved
+- `status.lastSuccessfulImage`
+- Initial successful image establishment
+- Initial Deployment excluded from upgrade classification
+- Tag-based upgrade tracking
+- Digest-based upgrade-compatible lifecycle
+- `Upgrading` condition
+- `NoUpgrade` reason
+- `UpgradeInProgress` reason
+- `UpgradeComplete` reason
+- `UpgradeFailed` reason
+- Upgrade-complete state preservation
+- Deployment generation observation
+- Updated replica observation
+- Total replica observation
+- Ready replica observation
+- Available replica observation
+- Unavailable replica observation
+- Deployment rollout completion detection
+- Progress deadline failure detection
+- Replica failure detection
+- Scale-to-zero image upgrade semantics
+- Failed-upgrade successful-image preservation
+- No automatic rollback
+- Explicit `progressDeadlineSeconds: 600`
+- Deterministic SHA-256 runtime configuration checksum
+- Stable checksum independent of Go map iteration order
+- Operator-owned `runtime.trussium.io/config-checksum` annotation
+- Configuration-triggered Deployment rollouts
+- Secret values excluded from checksums
+- `RuntimeUpgradeStarted` Event
+- `RuntimeUpgradeCompleted` Event
+- `RuntimeUpgradeFailed` Event
+- Initial Deployment upgrade-Event suppression
+- Duplicate upgrade-Event prevention
+- No Pod RBAC
+- No ReplicaSet RBAC
+- No rollout polling
+- Upgrade lifecycle tests
+- Configuration checksum tests
+- Upgrade Event tests
+- Upgrade lifecycle documentation
+- Compatibility documentation
+- Upgrade lifecycle architecture decision record
 
-The upgrade lifecycle will build on Deployment status rather than introducing
-direct Pod reads.
+Compatibility is documented for pre-release development without inventing
+unsupported version guarantees.
 
 ---
 
@@ -499,21 +520,23 @@ Compatibility will be tracked by operator and runtime release:
 
 ## Immediate Priority
 
-The next priority is Milestone O6:
+The next priority is Milestone O7:
 
-1. Define the runtime upgrade lifecycle and compatibility contract.
+1. Validate the operator against Kubernetes API machinery and real clusters.
 
 The next milestone will focus on:
 
-- Explicit desired and current runtime version reporting
-- Upgrade-state conditions
-- Upgrade lifecycle Events
-- Deployment rollout monitoring
-- Rollout failure handling
-- Upgrade completion detection
-- Configuration-triggered rollouts
-- Safe runtime image transitions
-- Operator/runtime compatibility boundaries
-- Upgrade documentation
-- Rollback documentation
-- Compatibility matrix foundations
+- envtest integration
+- CRD installation validation
+- Manager/controller integration
+- Managed-resource lifecycle tests
+- Status integration tests
+- Secret-reference integration tests
+- PodDisruptionBudget integration tests
+- Upgrade lifecycle integration tests
+- Kind-cluster installation
+- Real Deployment rollout validation
+- Runtime readiness validation
+- Configuration-triggered rollout validation
+- Runtime image upgrade validation
+- Garbage-collection validation

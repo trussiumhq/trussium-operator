@@ -38,6 +38,7 @@ const (
 	conditionTypeAvailable          = "Available"
 	conditionTypeReady              = "Ready"
 	conditionTypeDegraded           = "Degraded"
+	conditionTypeUpgrading          = "Upgrading"
 
 	reasonReferencesResolved          = "ReferencesResolved"
 	reasonSecretNotFound              = "SecretNotFound"
@@ -56,6 +57,10 @@ const (
 	reasonProgressDeadlineExceeded    = "ProgressDeadlineExceeded"
 	reasonReplicaFailure              = "ReplicaFailure"
 	reasonReconciliationFailed        = "ReconciliationFailed"
+	reasonNoUpgrade                   = "NoUpgrade"
+	reasonUpgradeInProgress           = "UpgradeInProgress"
+	reasonUpgradeComplete             = "UpgradeComplete"
+	reasonUpgradeFailed               = "UpgradeFailed"
 )
 
 type referenceValidationResult struct {
@@ -203,7 +208,110 @@ func (r *TrussiumRuntimeReconciler) loadRuntimeObservation(
 	return observation, nil
 }
 
+type deploymentRolloutState int
+
+const (
+	deploymentRolloutProgressing deploymentRolloutState = iota
+	deploymentRolloutComplete
+	deploymentRolloutFailed
+)
+
+func observeDeploymentRollout(
+	runtimeResource *runtimev1alpha1.TrussiumRuntime,
+	deployment *appsv1.Deployment,
+) deploymentRolloutState {
+	if deployment == nil {
+		return deploymentRolloutProgressing
+	}
+
+	if deploymentHasRolloutFailure(deployment) {
+		return deploymentRolloutFailed
+	}
+
+	if deployment.Status.ObservedGeneration <
+		deployment.Generation {
+		return deploymentRolloutProgressing
+	}
+
+	desired := desiredReplicas(runtimeResource)
+
+	if desired == 0 {
+		if deployment.Status.Replicas != 0 ||
+			deployment.Status.UpdatedReplicas != 0 ||
+			deployment.Status.ReadyReplicas != 0 ||
+			deployment.Status.AvailableReplicas != 0 ||
+			deployment.Status.UnavailableReplicas != 0 {
+			return deploymentRolloutProgressing
+		}
+
+		return deploymentRolloutComplete
+	}
+
+	if deployment.Status.UpdatedReplicas != desired {
+		return deploymentRolloutProgressing
+	}
+
+	if deployment.Status.Replicas != desired {
+		return deploymentRolloutProgressing
+	}
+
+	if deployment.Status.ReadyReplicas != desired {
+		return deploymentRolloutProgressing
+	}
+
+	if deployment.Status.AvailableReplicas != desired {
+		return deploymentRolloutProgressing
+	}
+
+	if deployment.Status.UnavailableReplicas != 0 {
+		return deploymentRolloutProgressing
+	}
+
+	return deploymentRolloutComplete
+}
+
+func deploymentHasRolloutFailure(
+	deployment *appsv1.Deployment,
+) bool {
+	if deployment == nil {
+		return false
+	}
+
+	for _, condition := range deployment.Status.Conditions {
+		if condition.Type == appsv1.DeploymentProgressing &&
+			condition.Status == corev1.ConditionFalse &&
+			condition.Reason == reasonProgressDeadlineExceeded {
+			return true
+		}
+
+		if condition.Type == appsv1.DeploymentReplicaFailure &&
+			condition.Status == corev1.ConditionTrue {
+			return true
+		}
+	}
+
+	return false
+}
+
 func buildRuntimeStatus(
+	runtimeResource *runtimev1alpha1.TrussiumRuntime,
+	observation runtimeObservation,
+	validation referenceValidationResult,
+) runtimev1alpha1.TrussiumRuntimeStatus {
+	status := buildBaseRuntimeStatus(
+		runtimeResource,
+		observation,
+		validation,
+	)
+
+	return applyUpgradeStatus(
+		runtimeResource,
+		observation.Deployment,
+		status,
+	)
+}
+
+func buildBaseRuntimeStatus(
 	runtimeResource *runtimev1alpha1.TrussiumRuntime,
 	observation runtimeObservation,
 	validation referenceValidationResult,
@@ -213,6 +321,7 @@ func buildRuntimeStatus(
 	status.ObservedGeneration = runtimeResource.Generation
 	status.ReadyReplicas = 0
 	status.AvailableReplicas = 0
+	status.DesiredImage = runtimeImage(runtimeResource.Spec.Image)
 	status.CurrentImage = deploymentCurrentImage(
 		observation.Deployment,
 	)
@@ -739,10 +848,7 @@ func copyRuntimeStatus(
 	status runtimev1alpha1.TrussiumRuntimeStatus,
 ) runtimev1alpha1.TrussiumRuntimeStatus {
 	copiedStatus := status
-	copiedStatus.Conditions = append(
-		[]metav1.Condition(nil),
-		status.Conditions...,
-	)
+	copiedStatus.Conditions = slices.Clone(status.Conditions)
 
 	return copiedStatus
 }
@@ -812,4 +918,134 @@ func (r *TrussiumRuntimeReconciler) updateRuntimeStatus(
 	}
 
 	return true, nil
+}
+
+func applyUpgradeStatus(
+	runtimeResource *runtimev1alpha1.TrussiumRuntime,
+	deployment *appsv1.Deployment,
+	status runtimev1alpha1.TrussiumRuntimeStatus,
+) runtimev1alpha1.TrussiumRuntimeStatus {
+	desiredImage := runtimeImage(
+		runtimeResource.Spec.Image,
+	)
+
+	status.DesiredImage = desiredImage
+
+	rolloutState := observeDeploymentRollout(
+		runtimeResource,
+		deployment,
+	)
+
+	lastSuccessfulImage :=
+		status.LastSuccessfulImage
+
+	// The first successful Deployment establishes the initial successful
+	// runtime image. Initial deployment is not classified as an upgrade.
+	if lastSuccessfulImage == "" {
+		if rolloutState == deploymentRolloutComplete &&
+			deploymentCurrentImage(deployment) == desiredImage {
+			status.LastSuccessfulImage =
+				desiredImage
+		}
+
+		setRuntimeCondition(
+			&status,
+			runtimeResource.Generation,
+			conditionTypeUpgrading,
+			metav1.ConditionFalse,
+			reasonNoUpgrade,
+			"No runtime image upgrade is in progress.",
+		)
+
+		return status
+	}
+
+	// Reconciliation may roll configuration, metadata, scheduling, or other
+	// Pod-template changes without changing the runtime image. Those are not
+	// runtime image upgrades.
+	if desiredImage == lastSuccessfulImage {
+		existingCondition := runtimeCondition(
+			status,
+			conditionTypeUpgrading,
+		)
+
+		if existingCondition == nil {
+			setRuntimeCondition(
+				&status,
+				runtimeResource.Generation,
+				conditionTypeUpgrading,
+				metav1.ConditionFalse,
+				reasonNoUpgrade,
+				"No runtime image upgrade is in progress.",
+			)
+		}
+
+		return status
+	}
+
+	switch rolloutState {
+	case deploymentRolloutFailed:
+		setRuntimeCondition(
+			&status,
+			runtimeResource.Generation,
+			conditionTypeUpgrading,
+			metav1.ConditionFalse,
+			reasonUpgradeFailed,
+			fmt.Sprintf(
+				"Runtime image upgrade from %s to %s failed.",
+				lastSuccessfulImage,
+				desiredImage,
+			),
+		)
+
+	case deploymentRolloutComplete:
+		if deploymentCurrentImage(deployment) != desiredImage {
+			setRuntimeCondition(
+				&status,
+				runtimeResource.Generation,
+				conditionTypeUpgrading,
+				metav1.ConditionTrue,
+				reasonUpgradeInProgress,
+				fmt.Sprintf(
+					"Runtime image is transitioning from %s to %s.",
+					lastSuccessfulImage,
+					desiredImage,
+				),
+			)
+
+			return status
+		}
+
+		status.LastSuccessfulImage =
+			desiredImage
+
+		setRuntimeCondition(
+			&status,
+			runtimeResource.Generation,
+			conditionTypeUpgrading,
+			metav1.ConditionFalse,
+			reasonUpgradeComplete,
+			fmt.Sprintf(
+				"Runtime image upgrade from %s to %s completed.",
+				lastSuccessfulImage,
+				desiredImage,
+			),
+		)
+
+	default:
+		setRuntimeCondition(
+			&status,
+			runtimeResource.Generation,
+			conditionTypeUpgrading,
+			metav1.ConditionTrue,
+			reasonUpgradeInProgress,
+			fmt.Sprintf(
+				"Runtime image is upgrading from %s to %s.",
+				lastSuccessfulImage,
+				desiredImage,
+			),
+		)
+	}
+
+	return status
 }

@@ -271,6 +271,42 @@ The v1alpha1 status contract contains:
 | `endpoint` | Runtime Service endpoint |
 | `conditions` | Standard Kubernetes conditions |
 
+### `status.desiredImage`
+
+Fully rendered image requested by the current `spec.image`.
+
+Example:
+
+    ghcr.io/trussiumhq/trussium:v0.24.0
+
+### `status.currentImage`
+
+Image currently configured on the managed Deployment.
+
+### `status.lastSuccessfulImage`
+
+Image whose Deployment rollout most recently completed successfully.
+
+This value remains unchanged while an upgrade is progressing or after an
+upgrade failure.
+
+### `Upgrading` Condition
+
+Upgrade lifecycle is represented through:
+
+    type: Upgrading
+
+Reasons:
+
+| Reason | Status | Meaning |
+|---|---|---|
+| `NoUpgrade` | `False` | No image upgrade is active |
+| `UpgradeInProgress` | `True` | A previously successful image is transitioning |
+| `UpgradeComplete` | `False` | The desired image completed successfully |
+| `UpgradeFailed` | `False` | The requested image rollout failed |
+
+Initial provisioning is not classified as an upgrade.
+
 ## Printer Columns
 
 A future controller-populated resource will be displayed as:

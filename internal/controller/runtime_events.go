@@ -25,17 +25,21 @@ import (
 )
 
 const (
-	eventReasonRuntimeProgressing   = "RuntimeProgressing"
-	eventReasonRuntimeReady         = "RuntimeReady"
-	eventReasonRuntimeRecovered     = "RuntimeRecovered"
-	eventReasonRuntimeScaledToZero  = "RuntimeScaledToZero"
-	eventReasonConfigurationInvalid = "ConfigurationInvalid"
-	eventReasonReconciliationFailed = "ReconciliationFailed"
-	eventReasonRuntimeDegraded      = "RuntimeDegraded"
+	eventReasonRuntimeProgressing      = "RuntimeProgressing"
+	eventReasonRuntimeReady            = "RuntimeReady"
+	eventReasonRuntimeRecovered        = "RuntimeRecovered"
+	eventReasonRuntimeScaledToZero     = "RuntimeScaledToZero"
+	eventReasonConfigurationInvalid    = "ConfigurationInvalid"
+	eventReasonReconciliationFailed    = "ReconciliationFailed"
+	eventReasonRuntimeDegraded         = "RuntimeDegraded"
+	eventReasonRuntimeUpgradeStarted   = "RuntimeUpgradeStarted"
+	eventReasonRuntimeUpgradeCompleted = "RuntimeUpgradeCompleted"
+	eventReasonRuntimeUpgradeFailed    = "RuntimeUpgradeFailed"
 
 	eventActionReconcileRuntime      = "ReconcileRuntime"
 	eventActionValidateConfiguration = "ValidateConfiguration"
 	eventActionObserveRuntime        = "ObserveRuntime"
+	eventActionUpgradeRuntime        = "UpgradeRuntime"
 )
 
 // recordStatusTransitionEvents emits Events only when a meaningful condition
@@ -50,6 +54,11 @@ func (r *TrussiumRuntimeReconciler) recordStatusTransitionEvents(
 	}
 
 	r.recordConfigurationTransition(
+		runtimeResource,
+		previousStatus,
+		currentStatus,
+	)
+	r.recordUpgradeTransition(
 		runtimeResource,
 		previousStatus,
 		currentStatus,
@@ -244,6 +253,111 @@ func (r *TrussiumRuntimeReconciler) recordReconciliationFailure(
 		"Runtime reconciliation failed: %v",
 		reconciliationError,
 	)
+}
+
+func (r *TrussiumRuntimeReconciler) recordUpgradeTransition(
+	runtimeResource *runtimev1alpha1.TrussiumRuntime,
+	previousStatus runtimev1alpha1.TrussiumRuntimeStatus,
+	currentStatus runtimev1alpha1.TrussiumRuntimeStatus,
+) {
+	if !conditionChanged(
+		previousStatus,
+		currentStatus,
+		conditionTypeUpgrading,
+	) {
+		return
+	}
+
+	condition := runtimeCondition(
+		currentStatus,
+		conditionTypeUpgrading,
+	)
+	if condition == nil {
+		return
+	}
+
+	sourceImage := previousStatus.LastSuccessfulImage
+	destinationImage := currentStatus.DesiredImage
+
+	switch condition.Reason {
+	case reasonUpgradeInProgress:
+		if condition.Status != metav1.ConditionTrue {
+			return
+		}
+
+		if !validUpgradeEventImages(
+			sourceImage,
+			destinationImage,
+		) {
+			return
+		}
+
+		r.Recorder.Eventf(
+			runtimeResource,
+			nil,
+			corev1.EventTypeNormal,
+			eventReasonRuntimeUpgradeStarted,
+			eventActionUpgradeRuntime,
+			"Runtime image upgrade started from %s to %s.",
+			sourceImage,
+			destinationImage,
+		)
+
+	case reasonUpgradeComplete:
+		if condition.Status != metav1.ConditionFalse {
+			return
+		}
+
+		if !validUpgradeEventImages(
+			sourceImage,
+			destinationImage,
+		) {
+			return
+		}
+
+		r.Recorder.Eventf(
+			runtimeResource,
+			nil,
+			corev1.EventTypeNormal,
+			eventReasonRuntimeUpgradeCompleted,
+			eventActionUpgradeRuntime,
+			"Runtime image upgrade completed from %s to %s.",
+			sourceImage,
+			destinationImage,
+		)
+
+	case reasonUpgradeFailed:
+		if condition.Status != metav1.ConditionFalse {
+			return
+		}
+
+		if !validUpgradeEventImages(
+			sourceImage,
+			destinationImage,
+		) {
+			return
+		}
+
+		r.Recorder.Eventf(
+			runtimeResource,
+			nil,
+			corev1.EventTypeWarning,
+			eventReasonRuntimeUpgradeFailed,
+			eventActionUpgradeRuntime,
+			"Runtime image upgrade failed from %s to %s.",
+			sourceImage,
+			destinationImage,
+		)
+	}
+}
+
+func validUpgradeEventImages(
+	sourceImage string,
+	destinationImage string,
+) bool {
+	return sourceImage != "" &&
+		destinationImage != "" &&
+		sourceImage != destinationImage
 }
 
 // Compile-time verification that the Kubernetes recorder satisfies the

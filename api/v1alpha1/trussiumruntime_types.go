@@ -241,30 +241,41 @@ type TrussiumRuntimeSpec struct {
 	Scheduling *SchedulingSpec `json:"scheduling,omitempty"`
 }
 
-// TrussiumRuntimeStatus defines the observed state of a Trussium runtime.
+// TrussiumRuntimeStatus defines the observed state of TrussiumRuntime.
 type TrussiumRuntimeStatus struct {
-	// ObservedGeneration is the most recent resource generation processed by
-	// the controller.
+	// ObservedGeneration is the most recent TrussiumRuntime generation
+	// observed by the controller.
 	// +optional
 	ObservedGeneration int64 `json:"observedGeneration,omitempty"`
 
-	// ReadyReplicas is the number of runtime replicas currently ready.
+	// ReadyReplicas is the number of ready runtime replicas.
 	// +optional
 	ReadyReplicas int32 `json:"readyReplicas,omitempty"`
 
-	// AvailableReplicas is the number of runtime replicas currently available.
+	// AvailableReplicas is the number of available runtime replicas.
 	// +optional
 	AvailableReplicas int32 `json:"availableReplicas,omitempty"`
 
-	// CurrentImage is the complete runtime image observed by the controller.
+	// DesiredImage is the fully rendered runtime image requested by the
+	// current TrussiumRuntime specification.
+	// +optional
+	DesiredImage string `json:"desiredImage,omitempty"`
+
+	// CurrentImage is the runtime image currently configured on the managed
+	// Deployment.
 	// +optional
 	CurrentImage string `json:"currentImage,omitempty"`
 
-	// Endpoint is the Kubernetes Service endpoint for the runtime.
+	// LastSuccessfulImage is the runtime image whose Deployment rollout most
+	// recently completed successfully.
+	// +optional
+	LastSuccessfulImage string `json:"lastSuccessfulImage,omitempty"`
+
+	// Endpoint is the internal Kubernetes Service endpoint for the runtime.
 	// +optional
 	Endpoint string `json:"endpoint,omitempty"`
 
-	// Conditions describe the current runtime state.
+	// Conditions represent the latest available observations of the runtime.
 	// +optional
 	// +listType=map
 	// +listMapKey=type
