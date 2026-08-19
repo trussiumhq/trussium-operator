@@ -1291,12 +1291,13 @@ spec:
             description: Status reports the observed runtime state.
             properties:
               availableReplicas:
-                description: AvailableReplicas is the number of runtime replicas currently
-                  available.
+                description: AvailableReplicas is the number of available runtime
+                  replicas.
                 format: int32
                 type: integer
               conditions:
-                description: Conditions describe the current runtime state.
+                description: Conditions represent the latest available observations
+                  of the runtime.
                 items:
                   description: Condition contains details for one aspect of the current
                     state of this API Resource.
@@ -1356,21 +1357,32 @@ spec:
                 - type
                 x-kubernetes-list-type: map
               currentImage:
-                description: CurrentImage is the complete runtime image observed by
-                  the controller.
+                description: |-
+                  CurrentImage is the runtime image currently configured on the managed
+                  Deployment.
+                type: string
+              desiredImage:
+                description: |-
+                  DesiredImage is the fully rendered runtime image requested by the
+                  current TrussiumRuntime specification.
                 type: string
               endpoint:
-                description: Endpoint is the Kubernetes Service endpoint for the runtime.
+                description: Endpoint is the internal Kubernetes Service endpoint
+                  for the runtime.
+                type: string
+              lastSuccessfulImage:
+                description: |-
+                  LastSuccessfulImage is the runtime image whose Deployment rollout most
+                  recently completed successfully.
                 type: string
               observedGeneration:
                 description: |-
-                  ObservedGeneration is the most recent resource generation processed by
-                  the controller.
+                  ObservedGeneration is the most recent TrussiumRuntime generation
+                  observed by the controller.
                 format: int64
                 type: integer
               readyReplicas:
-                description: ReadyReplicas is the number of runtime replicas currently
-                  ready.
+                description: ReadyReplicas is the number of ready runtime replicas.
                 format: int32
                 type: integer
             type: object

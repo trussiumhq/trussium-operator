@@ -17,8 +17,12 @@ limitations under the License.
 package controller
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"maps"
+	"slices"
 	"strconv"
+	"strings"
 
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
@@ -35,15 +39,17 @@ const (
 	runtimeHTTPPortName  = "http"
 	runtimeHTTPPort      = int32(9000)
 
-	runtimeUserID                  = int64(10001)
-	runtimeGroupID                 = int64(10001)
-	defaultShutdownDrainSeconds    = int32(30)
-	terminationGraceMarginSeconds  = int64(6)
-	defaultTerminationGraceSeconds = int64(36)
-	deploymentRevisionHistoryLimit = int32(3)
-	topologyHostnameKey            = "kubernetes.io/hostname"
-	healthLivePath                 = "/health/live"
-	healthReadyPath                = "/health/ready"
+	runtimeUserID                     = int64(10001)
+	runtimeGroupID                    = int64(10001)
+	defaultShutdownDrainSeconds       = int32(30)
+	terminationGraceMarginSeconds     = int64(6)
+	defaultTerminationGraceSeconds    = int64(36)
+	deploymentRevisionHistoryLimit    = int32(3)
+	runtimeConfigChecksumAnnotation   = "runtime.trussium.io/config-checksum"
+	deploymentProgressDeadlineSeconds = int32(600)
+	topologyHostnameKey               = "kubernetes.io/hostname"
+	healthLivePath                    = "/health/live"
+	healthReadyPath                   = "/health/ready"
 
 	envEnvironment             = "TRUSSIUM_ENVIRONMENT"
 	envRuntimeHost             = "TRUSSIUM_RUNTIME__HOST"
@@ -172,20 +178,19 @@ func mergedPodLabels(
 func podAnnotations(
 	runtimeResource *runtimev1alpha1.TrussiumRuntime,
 ) map[string]string {
-	if runtimeResource.Spec.PodMetadata == nil ||
-		len(runtimeResource.Spec.PodMetadata.Annotations) == 0 {
-		return nil
+	annotations := make(map[string]string)
+
+	if runtimeResource.Spec.PodMetadata != nil {
+		maps.Copy(
+			annotations,
+			runtimeResource.Spec.PodMetadata.Annotations,
+		)
 	}
 
-	annotations := make(
-		map[string]string,
-		len(runtimeResource.Spec.PodMetadata.Annotations),
-	)
-
-	maps.Copy(
-		annotations,
-		runtimeResource.Spec.PodMetadata.Annotations,
-	)
+	annotations[runtimeConfigChecksumAnnotation] =
+		runtimeConfigChecksum(
+			runtimeConfigData(runtimeResource),
+		)
 
 	return annotations
 }
@@ -278,6 +283,39 @@ func runtimeConfigData(
 	}
 
 	return data
+}
+
+func runtimeConfigChecksum(
+	data map[string]string,
+) string {
+	keys := make([]string, 0, len(data))
+
+	for key := range data {
+		keys = append(keys, key)
+	}
+
+	slices.Sort(keys)
+
+	var payload strings.Builder
+
+	for _, key := range keys {
+		value := data[key]
+
+		payload.WriteString(strconv.Itoa(len(key)))
+		payload.WriteByte(':')
+		payload.WriteString(key)
+		payload.WriteByte(':')
+		payload.WriteString(strconv.Itoa(len(value)))
+		payload.WriteByte(':')
+		payload.WriteString(value)
+		payload.WriteByte(';')
+	}
+
+	checksum := sha256.Sum256(
+		[]byte(payload.String()),
+	)
+
+	return hex.EncodeToString(checksum[:])
 }
 
 // buildConfigMap constructs the desired runtime ConfigMap.
@@ -378,6 +416,9 @@ func buildDeployment(
 		},
 		Spec: appsv1.DeploymentSpec{
 			Replicas: ptr.To(desiredReplicas(runtimeResource)),
+			ProgressDeadlineSeconds: ptr.To(
+				deploymentProgressDeadlineSeconds,
+			),
 			Selector: &metav1.LabelSelector{
 				MatchLabels: selectorLabels,
 			},

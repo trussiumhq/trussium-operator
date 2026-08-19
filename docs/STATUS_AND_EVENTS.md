@@ -67,6 +67,7 @@ The controller maintains five conditions:
 - `Available`
 - `Ready`
 - `Degraded`
+- `Upgrading`
 
 Conditions use stable UpperCamelCase reasons and preserve
 `lastTransitionTime` while their status remains unchanged.
@@ -169,6 +170,53 @@ Reasons include:
 `Degraded=False` uses:
 
 - `AsExpected`
+
+## Upgrade Status
+
+Upgrade lifecycle adds:
+
+| Field | Description |
+|---|---|
+| `desiredImage` | Fully rendered image requested by the current specification |
+| `currentImage` | Image currently configured on the managed Deployment |
+| `lastSuccessfulImage` | Image whose rollout most recently completed successfully |
+
+The operator also maintains:
+
+    type: Upgrading
+
+with stable reasons:
+
+- `NoUpgrade`
+- `UpgradeInProgress`
+- `UpgradeComplete`
+- `UpgradeFailed`
+
+Initial Deployment is not treated as an upgrade.
+
+`lastSuccessfulImage` is initialized only after the first successful rollout.
+
+During an image transition, `lastSuccessfulImage` remains on the previous
+successful image until the desired image completes.
+
+Failed upgrades preserve the previous successful image.
+
+### Upgrade Events
+
+Normal:
+
+- `RuntimeUpgradeStarted`
+- `RuntimeUpgradeCompleted`
+
+Warning:
+
+- `RuntimeUpgradeFailed`
+
+Upgrade Events include the previous successful image and desired image where
+applicable.
+
+They are emitted only for lifecycle transitions and are not duplicated during
+unchanged reconciliation.
 
 ## Deployment Observation
 

@@ -174,6 +174,31 @@ Run:
     make test
     make lint
 
+## Runtime Upgrades
+
+The operator observes runtime image transitions through Kubernetes Deployment
+status.
+
+Upgrade status reports:
+
+- Desired runtime image
+- Deployment-configured runtime image
+- Last successfully rolled-out image
+- Upgrade progress
+- Upgrade completion
+- Upgrade failure
+
+Runtime configuration changes also trigger Deployment revisions through a
+deterministic Pod-template checksum.
+
+The operator does not automatically roll back failed upgrades and does not
+require Pod or ReplicaSet permissions.
+
+See:
+
+- [docs/UPGRADES.md](docs/UPGRADES.md)
+- [docs/COMPATIBILITY.md](docs/COMPATIBILITY.md)
+
 ## Roadmap
 
 The public operator roadmap is maintained in [ROADMAP.md](ROADMAP.md).

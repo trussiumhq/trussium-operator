@@ -79,10 +79,10 @@ func TestRuntimeConfigData(t *testing.T) {
 	actual := runtimeConfigData(runtimeResource)
 
 	expected := map[string]string{
-		envEnvironment:            "production",
+		envEnvironment:            defaultRuntimeEnvironment,
 		envRuntimeHost:            "0.0.0.0",
 		envRuntimePort:            "9000",
-		envProviderName:           "ollama",
+		envProviderName:           testProviderName,
 		envProviderBaseURL:        baseURL,
 		envProviderRequestSeconds: "75",
 		envProviderStreamIdle:     "40",
@@ -337,7 +337,7 @@ func newTestRuntime() *runtimev1alpha1.TrussiumRuntime {
 			Kind:       "TrussiumRuntime",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      "production",
+			Name:      defaultRuntimeEnvironment,
 			Namespace: testRuntimeNamespace,
 		},
 		Spec: runtimev1alpha1.TrussiumRuntimeSpec{
