@@ -27,3 +27,9 @@ jobs:
           TRUSSIUM_OPERATOR_IMAGE_REPOSITORY: trussium-operator
           TRUSSIUM_OPERATOR_IMAGE_TAG: test
         run: scripts/chart-smoke-test.sh
+      - name: Collect lifecycle diagnostics on failure
+        if: failure()
+        run: |
+          kubectl get all -n trussium-operator-helm-test -o wide || true
+          kubectl get events -n trussium-operator-helm-test --sort-by=.lastTimestamp || true
+          kubectl logs -n trussium-operator-helm-test deployment/trussium-operator-trussium-operator --all-containers=true || true
