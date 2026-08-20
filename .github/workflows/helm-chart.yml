@@ -33,3 +33,8 @@ jobs:
           kubectl get all -n trussium-operator-helm-test -o wide || true
           kubectl get events -n trussium-operator-helm-test --sort-by=.lastTimestamp || true
           kubectl logs -n trussium-operator-helm-test deployment/trussium-operator-trussium-operator --all-containers=true || true
+      - name: Clean up lifecycle resources
+        if: always()
+        run: |
+          helm uninstall trussium-operator --namespace trussium-operator-helm-test --ignore-not-found
+          kubectl delete namespace trussium-operator-helm-test --ignore-not-found --wait=false

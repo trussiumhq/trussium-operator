@@ -10,7 +10,15 @@ cleanup() {
   helm uninstall "$release" --namespace "$namespace" --ignore-not-found
   kubectl delete namespace "$namespace" --ignore-not-found --wait=false
 }
-trap cleanup EXIT
+
+cleanup_on_success() {
+  status=$?
+  if [ "$status" -eq 0 ]; then
+    cleanup
+  fi
+  exit "$status"
+}
+trap cleanup_on_success EXIT
 
 helm install "$release" charts/trussium-operator \
   --namespace "$namespace" \
