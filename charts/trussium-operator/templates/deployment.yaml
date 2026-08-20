@@ -52,6 +52,9 @@ spec:
             - --leader-elect
             - --health-probe-bind-address=:8081
             - --metrics-bind-address=:8443
+            {{- with .Values.watchNamespace }}
+            - {{ printf "--watch-namespace=%s" . | quote }}
+            {{- end }}
           image: {{ include "trussium-operator.image" . | quote }}
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
