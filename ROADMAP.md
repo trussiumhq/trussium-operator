@@ -410,7 +410,7 @@ Validate the controller against Kubernetes API machinery and real clusters.
 
 ## Milestone O8 — Operator Packaging and Release
 
-**Status:** 🗓 Planned
+**Status:** 🚧 In Progress
 
 Make the operator independently installable and releasable.
 
@@ -430,6 +430,14 @@ Make the operator independently installable and releasable.
 - Upgrade notes
 - Compatibility documentation
 - Semantic release process
+
+### Implemented
+
+- Conventional Commit-driven semantic versioning
+- GitHub release creation with `vMAJOR.MINOR.PATCH` tags
+- Multi-platform AMD64 and ARM64 GitHub Container Registry publication
+- OCI image metadata, SBOM, and provenance
+- Go CodeQL security scanning
 
 ---
 

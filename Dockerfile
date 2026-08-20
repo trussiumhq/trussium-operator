@@ -24,6 +24,19 @@ RUN CGO_ENABLED=0 GOOS=${TARGETOS:-linux} GOARCH=${TARGETARCH} go build -a -o ma
 # Use distroless as minimal base image to package the manager binary
 # Refer to https://github.com/GoogleContainerTools/distroless for more details
 FROM gcr.io/distroless/static:nonroot
+ARG BUILD_DATE="unknown"
+ARG VERSION="dev"
+ARG VCS_REF="unknown"
+ARG SOURCE_URL="https://github.com/trussiumhq/trussium-operator"
+
+LABEL org.opencontainers.image.title="Trussium Operator" \
+      org.opencontainers.image.description="Kubernetes operator for Trussium runtimes." \
+      org.opencontainers.image.source="${SOURCE_URL}" \
+      org.opencontainers.image.revision="${VCS_REF}" \
+      org.opencontainers.image.version="${VERSION}" \
+      org.opencontainers.image.created="${BUILD_DATE}" \
+      org.opencontainers.image.licenses="Apache-2.0"
+
 WORKDIR /
 COPY --from=builder /workspace/manager .
 USER 65532:65532
