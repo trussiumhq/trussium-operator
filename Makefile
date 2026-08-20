@@ -193,6 +193,7 @@ $(LOCALBIN):
 KUBECTL ?= kubectl
 KIND ?= kind
 KUSTOMIZE ?= $(LOCALBIN)/kustomize
+HELM ?= helm
 CONTROLLER_GEN ?= $(LOCALBIN)/controller-gen
 ENVTEST ?= $(LOCALBIN)/setup-envtest
 GOLANGCI_LINT = $(LOCALBIN)/golangci-lint
@@ -216,6 +217,16 @@ GOLANGCI_LINT_VERSION ?= v2.12.2
 kustomize: $(KUSTOMIZE) ## Download kustomize locally if necessary.
 $(KUSTOMIZE): $(LOCALBIN)
 	$(call go-install-tool,$(KUSTOMIZE),sigs.k8s.io/kustomize/kustomize/v5,$(KUSTOMIZE_VERSION))
+
+.PHONY: helm-lint
+helm-lint: ## Lint and render the operator Helm chart.
+	$(HELM) lint charts/trussium-operator
+	$(HELM) template trussium-operator charts/trussium-operator --namespace trussium-operator-system --include-crds > /dev/null
+
+.PHONY: helm-package
+helm-package: helm-lint ## Package the validated operator Helm chart.
+	mkdir -p dist
+	$(HELM) package charts/trussium-operator --destination dist
 
 .PHONY: controller-gen
 controller-gen: $(CONTROLLER_GEN) ## Download controller-gen locally if necessary.

@@ -1,0 +1,40 @@
+image:
+  repository: ghcr.io/trussiumhq/trussium-operator
+  pullPolicy: IfNotPresent
+  tag: ""
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+serviceAccount:
+  create: true
+  automount: false
+  annotations: {}
+  name: ""
+replicaCount: 1
+podAnnotations: {}
+podLabels: {}
+podSecurityContext:
+  runAsNonRoot: true
+  seccompProfile:
+    type: RuntimeDefault
+securityContext:
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop:
+      - ALL
+resources:
+  limits:
+    cpu: 500m
+    memory: 128Mi
+  requests:
+    cpu: 10m
+    memory: 64Mi
+metrics:
+  service:
+    enabled: true
+    type: ClusterIP
+    port: 8443
+nodeSelector: {}
+tolerations: []
+affinity: {}

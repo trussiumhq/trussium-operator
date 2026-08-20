@@ -45,6 +45,16 @@ kubectl apply -f \
 Replace `v<version>` with an operator release that includes the bundle. The
 release bundle pins the controller image to that same version.
 
+### Helm
+
+The operator also has its own Helm chart. It installs the operator CRD and
+controller; it does not install a Trussium runtime workload:
+
+Install the runtime chart separately, then use `TrussiumRuntime` resources for
+operator-managed runtime instances. See
+[the chart documentation](charts/trussium-operator/README.md) for values and
+local installation.
+
 ## Custom Resource
 
 The initial API is:
