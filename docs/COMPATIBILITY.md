@@ -99,20 +99,3 @@ Before changing a production runtime image:
 
 The operator does not automatically roll back an incompatible or failed
 runtime image.
-
-## Open-Source Boundary
-
-The public operator will continue to support ordinary runtime upgrades and
-compatibility documentation.
-
-Commercial Trussium products may later provide higher-level capabilities such
-as:
-
-- Fleet-wide compatibility reporting
-- Upgrade waves
-- Maintenance windows
-- Approval workflows
-- Cross-cluster rollout policy
-- Enterprise release channels
-
-The public operator remains independently usable without those services.
