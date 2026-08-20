@@ -194,6 +194,8 @@ KUBECTL ?= kubectl
 KIND ?= kind
 KUSTOMIZE ?= $(LOCALBIN)/kustomize
 HELM ?= helm
+CHART_VERSION ?= $(shell $(HELM) show chart charts/trussium-operator | awk '/^version:/ { print $$2 }')
+CHART_APP_VERSION ?= $(shell $(HELM) show chart charts/trussium-operator | awk '/^appVersion:/ { print $$2 }')
 CONTROLLER_GEN ?= $(LOCALBIN)/controller-gen
 ENVTEST ?= $(LOCALBIN)/setup-envtest
 GOLANGCI_LINT = $(LOCALBIN)/golangci-lint
@@ -226,7 +228,7 @@ helm-lint: ## Lint and render the operator Helm chart.
 .PHONY: helm-package
 helm-package: helm-lint ## Package the validated operator Helm chart.
 	mkdir -p dist
-	$(HELM) package charts/trussium-operator --destination dist
+	$(HELM) package charts/trussium-operator --destination dist --version $(CHART_VERSION) --app-version $(CHART_APP_VERSION)
 
 .PHONY: controller-gen
 controller-gen: $(CONTROLLER_GEN) ## Download controller-gen locally if necessary.
