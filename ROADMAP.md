@@ -12,31 +12,15 @@ through GitHub Issues.
 
 ## Current Focus
 
-The runtime upgrade lifecycle and compatibility contract have been implemented.
+Milestones O1 through O7 are complete. The operator now has controller
+integration coverage, Kind end-to-end coverage, and a first automated release
+at `v0.1.0`.
 
-The operator now provides:
-
-- Desired runtime image reporting
-- Current Deployment image reporting
-- Last successful runtime image tracking
-- Explicit runtime image upgrade detection
-- `Upgrading` condition
-- Upgrade progress reporting
-- Upgrade completion reporting
-- Upgrade failure reporting
-- Deployment rollout completion detection
-- Deployment progress deadline handling
-- Replica failure handling
-- Scale-to-zero upgrade semantics
-- Deterministic runtime configuration checksums
-- Configuration-triggered Deployment rollouts
-- Runtime upgrade lifecycle Events
-- Pre-release operator/runtime compatibility documentation
-
-Upgrade observation remains Kubernetes-native and requires no direct Pod or
-ReplicaSet permissions.
-
-The next priority is controller integration and end-to-end testing.
+The current priority is Milestone O8: make the operator straightforward to
+install, upgrade, and consume as a released Kubernetes package. Release
+automation, multi-platform images, SBOMs, provenance, and CodeQL scanning are
+in place. The remaining work is installation packaging, release and upgrade
+guidance, and an explicit operator/runtime compatibility matrix.
 
 ---
 
@@ -528,23 +512,10 @@ Compatibility will be tracked by operator and runtime release:
 
 ## Immediate Priority
 
-The next priority is Milestone O7:
+Complete Milestone O8 in this order:
 
-1. Validate the operator against Kubernetes API machinery and real clusters.
-
-The next milestone will focus on:
-
-- envtest integration
-- CRD installation validation
-- Manager/controller integration
-- Managed-resource lifecycle tests
-- Status integration tests
-- Secret-reference integration tests
-- PodDisruptionBudget integration tests
-- Upgrade lifecycle integration tests
-- Kind-cluster installation
-- Real Deployment rollout validation
-- Runtime readiness validation
-- Configuration-triggered rollout validation
-- Runtime image upgrade validation
-- Garbage-collection validation
+1. Publish a versioned CRD installation bundle.
+2. Add a Helm chart for repeatable operator installation and upgrades.
+3. Document release consumption, upgrade steps, and operator/runtime
+   compatibility.
+4. Validate the packaged installation paths in CI.

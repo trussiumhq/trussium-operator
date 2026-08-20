@@ -150,8 +150,12 @@ docker-buildx: ## Build and push docker image for the manager for cross-platform
 .PHONY: build-installer
 build-installer: manifests generate kustomize ## Generate a consolidated YAML with CRDs and deployment.
 	mkdir -p dist
-	cd config/manager && "$(KUSTOMIZE)" edit set image controller=${IMG}
-	"$(KUSTOMIZE)" build config/default > dist/install.yaml
+	@output="$(CURDIR)/dist/install.yaml"; \
+	tmpdir="$$(mktemp -d)"; \
+	trap 'rm -rf "$$tmpdir"' EXIT; \
+	cp -R config "$$tmpdir/config"; \
+	cd "$$tmpdir/config/manager" && "$(KUSTOMIZE)" edit set image controller=${IMG}; \
+	"$(KUSTOMIZE)" build "$$tmpdir/config/default" > "$$output"
 
 ##@ Deployment
 

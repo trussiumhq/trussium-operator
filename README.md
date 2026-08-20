@@ -33,6 +33,18 @@ The operator does not contain or compile the Trussium Python runtime. It
 consumes released runtime container images and manages their Kubernetes
 deployment lifecycle.
 
+## Installation
+
+Install a released operator version with its CRDs and controller deployment:
+
+```bash
+kubectl apply -f \
+  https://github.com/trussiumhq/trussium-operator/releases/download/v<version>/install.yaml
+```
+
+Replace `v<version>` with an operator release that includes the bundle. The
+release bundle pins the controller image to that same version.
+
 ## Custom Resource
 
 The initial API is:
