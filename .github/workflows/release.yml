@@ -8,6 +8,7 @@ on:
 permissions:
   actions: write
   contents: write
+  packages: write
 
 jobs:
   release:
@@ -35,12 +36,40 @@ jobs:
           IMG: ghcr.io/${{ github.repository }}:v${{ steps.semantic-release.outputs.version }}
         run: make build-installer IMG="$IMG"
 
+      - name: Set up Helm
+        if: steps.semantic-release.outputs.version != ''
+        uses: azure/setup-helm@v5
+
+      - name: Package Helm chart
+        if: steps.semantic-release.outputs.version != ''
+        env:
+          CHART_VERSION: ${{ steps.semantic-release.outputs.version }}
+          CHART_APP_VERSION: ${{ steps.semantic-release.outputs.version }}
+        run: make helm-package
+
       - name: Upload installation bundle
         if: steps.semantic-release.outputs.version != ''
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           RELEASE_TAG: v${{ steps.semantic-release.outputs.version }}
         run: gh release upload "$RELEASE_TAG" dist/install.yaml --clobber
+
+      - name: Upload Helm chart
+        if: steps.semantic-release.outputs.version != ''
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_TAG: v${{ steps.semantic-release.outputs.version }}
+          CHART_VERSION: ${{ steps.semantic-release.outputs.version }}
+        run: gh release upload "$RELEASE_TAG" "dist/trussium-operator-${CHART_VERSION}.tgz" --clobber
+
+      - name: Publish Helm chart to OCI registry
+        if: steps.semantic-release.outputs.version != ''
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CHART_VERSION: ${{ steps.semantic-release.outputs.version }}
+        run: |
+          printf '%s' "$GH_TOKEN" | helm registry login ghcr.io --username "${{ github.actor }}" --password-stdin
+          helm push "dist/trussium-operator-${CHART_VERSION}.tgz" oci://ghcr.io/trussiumhq/charts
 
       - name: Dispatch container publication
         if: steps.semantic-release.outputs.version != ''

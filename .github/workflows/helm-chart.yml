@@ -1,0 +1,40 @@
+name: Helm Chart
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  lifecycle:
+    name: Kind lifecycle smoke test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: azure/setup-helm@v5
+      - uses: helm/kind-action@v1
+        with:
+          cluster_name: trussium-operator-helm-ci
+      - name: Build and load controller image
+        run: |
+          docker build -t trussium-operator:test .
+          kind load docker-image trussium-operator:test --name trussium-operator-helm-ci
+      - name: Install and remove chart
+        env:
+          TRUSSIUM_OPERATOR_IMAGE_REPOSITORY: trussium-operator
+          TRUSSIUM_OPERATOR_IMAGE_TAG: test
+        run: scripts/chart-smoke-test.sh
+      - name: Collect lifecycle diagnostics on failure
+        if: failure()
+        run: |
+          kubectl get all -n trussium-operator-helm-test -o wide || true
+          kubectl get events -n trussium-operator-helm-test --sort-by=.lastTimestamp || true
+          kubectl logs -n trussium-operator-helm-test deployment/trussium-operator-trussium-operator --all-containers=true || true
+      - name: Clean up lifecycle resources
+        if: always()
+        run: |
+          helm uninstall trussium-operator --namespace trussium-operator-helm-test --ignore-not-found
+          kubectl delete namespace trussium-operator-helm-test --ignore-not-found --wait=false
