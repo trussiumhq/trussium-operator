@@ -1,5 +1,29 @@
 # Runtime Upgrade Lifecycle
 
+## Operator Upgrade and Rollback
+
+Upgrade the operator independently from managed runtime images. The operator
+upgrade does not modify existing `TrussiumRuntime.spec.image` values.
+
+For the released manifest bundle, apply the target version:
+
+```bash
+kubectl apply -f https://github.com/trussiumhq/trussium-operator/releases/download/v0.3.1/install.yaml
+kubectl rollout status deployment/trussium-operator-controller-manager -n trussium-operator-system
+```
+
+For Helm installations, upgrade to an explicit chart version:
+
+```bash
+helm upgrade trussium-operator oci://ghcr.io/trussiumhq/charts/trussium-operator \
+  --version 0.3.1 --namespace trussium-operator-system
+```
+
+Before upgrading, review the target release notes and back up custom resources.
+Afterwards, confirm the controller Deployment is available and observe existing
+`TrussiumRuntime` conditions. To roll back, apply or upgrade to the previously
+known-good operator version; do not delete CRDs as part of a rollback.
+
 The Trussium Operator provides an explicit lifecycle for runtime image
 transitions managed through `TrussiumRuntime`.
 
