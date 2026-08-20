@@ -12,15 +12,12 @@ through GitHub Issues.
 
 ## Current Focus
 
-Milestones O1 through O7 are complete. The operator now has controller
-integration coverage, Kind end-to-end coverage, and a first automated release
-at `v0.1.0`.
+Milestones O1 through O8 are complete. The operator now has released
+installation bundles, an OCI Helm chart, Kind lifecycle validation, and
+operator upgrade and compatibility guidance.
 
-The current priority is Milestone O8: make the operator straightforward to
-install, upgrade, and consume as a released Kubernetes package. Release
-automation, multi-platform images, SBOMs, provenance, and CodeQL scanning are
-in place. The remaining work is installation packaging, release and upgrade
-guidance, and an explicit operator/runtime compatibility matrix.
+The current priority is Milestone O9: operational extensions that build on the
+stable API, reconciliation, upgrade, and packaging contracts.
 
 ---
 
@@ -394,7 +391,7 @@ Validate the controller against Kubernetes API machinery and real clusters.
 
 ## Milestone O8 — Operator Packaging and Release
 
-**Status:** 🚧 In Progress
+**Status:** ✅ Completed
 
 Make the operator independently installable and releasable.
 
@@ -422,6 +419,11 @@ Make the operator independently installable and releasable.
 - Multi-platform AMD64 and ARM64 GitHub Container Registry publication
 - OCI image metadata, SBOM, and provenance
 - Go CodeQL security scanning
+- Versioned CRD and controller installation bundles attached to GitHub releases
+- OCI Helm chart publication at `ghcr.io/trussiumhq/charts/trussium-operator`
+- Helm lint, render, package, and Kind install/uninstall lifecycle validation
+- Operator upgrade and rollback guidance
+- Versioned Kubernetes and runtime-contract compatibility matrix
 
 ---
 
@@ -506,16 +508,11 @@ Compatibility will be tracked by operator and runtime release:
 
 | Operator version | Supported Trussium versions |
 |---|---|
-| Pre-release | To be established during the upgrade and end-to-end milestones |
+| v0.3.1 | Documented v0.x runtime contract; Kubernetes >=1.25 |
 
 ---
 
 ## Immediate Priority
 
-Complete Milestone O8 in this order:
-
-1. Publish a versioned CRD installation bundle.
-2. Add a Helm chart for repeatable operator installation and upgrades.
-3. Document release consumption, upgrade steps, and operator/runtime
-   compatibility.
-4. Validate the packaged installation paths in CI.
+Begin Milestone O9 with operational features that have clear user demand and
+can be validated against the released packaging contract.
