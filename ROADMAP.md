@@ -429,10 +429,15 @@ Make the operator independently installable and releasable.
 
 ## Milestone O9 — Operational Extensions
 
-**Status:** 🗓 Planned
+**Status:** 🚧 In Progress
 
 Add operational features after the core API, reconciliation, upgrade, and
 packaging contracts are stable.
+
+### In Progress
+
+- Configurable manager watched namespace with Helm configuration and
+  all-namespaces default
 
 ### Potential Deliverables
 

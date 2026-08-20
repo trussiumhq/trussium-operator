@@ -32,6 +32,10 @@ resource, pull-secret, and service-account settings through `values.yaml`.
 The controller mounts its ServiceAccount token because it must authenticate to
 the Kubernetes API; managed Trussium runtime Pods remain tokenless by default.
 
+Set `watchNamespace` to reconcile `TrussiumRuntime` resources in one namespace.
+The default empty value watches all namespaces. Namespace scoping limits the
+manager cache and watches; the chart's cluster-scoped RBAC remains unchanged.
+
 Validate local rendering with:
 
 ```bash

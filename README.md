@@ -55,6 +55,9 @@ operator-managed runtime instances. See
 [the chart documentation](charts/trussium-operator/README.md) for values and
 local installation.
 
+To limit reconciliation to a single tenant namespace, set the manager's
+`watchNamespace` Helm value. Leave it empty to watch all namespaces.
+
 ## Custom Resource
 
 The initial API is:

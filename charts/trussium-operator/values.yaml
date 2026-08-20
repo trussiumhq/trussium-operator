@@ -38,3 +38,4 @@ metrics:
 nodeSelector: {}
 tolerations: []
 affinity: {}
+watchNamespace: ""
