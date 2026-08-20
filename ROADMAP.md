@@ -380,7 +380,7 @@ unsupported version guarantees.
 
 ## Milestone O7 — Controller and End-to-End Testing
 
-**Status:** 🗓 Planned
+**Status:** ✅ Complete
 
 Validate the controller against Kubernetes API machinery and real clusters.
 

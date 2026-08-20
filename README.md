@@ -173,6 +173,7 @@ Run:
     make vet
     make test
     make lint
+    make test-e2e
 
 ## Runtime Upgrades
 

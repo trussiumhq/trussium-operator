@@ -67,11 +67,20 @@ make lint
 make test
 ```
 
-The project will eventually use:
+The project uses:
 
 - Standard Go tests for pure resource builders
 - envtest for controller integration tests
 - Kind for real-cluster end-to-end tests
+
+Run the complete Kind suite with:
+
+```bash
+make test-e2e
+```
+
+This target creates an isolated Kind cluster, builds and side-loads the
+operator image, runs the E2E suite, and removes the cluster afterward.
 
 ## Complete Validation
 
@@ -82,6 +91,7 @@ make fmt
 make vet
 make test
 make lint
+make test-e2e
 ```
 
 Before committing, stage the intended files and verify generation stability:
