@@ -155,20 +155,3 @@ A finalizer will only be added when the operator must clean up external state or
 resources that Kubernetes garbage collection cannot safely handle.
 
 The first runtime reconciliation should not require a finalizer.
-
-## Open-Source and Commercial Integration
-
-The operator will remain open source and independently usable.
-
-A future commercial Trussium control plane may interact with the operator
-through stable Kubernetes resources and APIs to provide:
-
-- Fleet inventory
-- Central policy distribution
-- Upgrade waves
-- Organization-level governance
-- Audit retention
-- Compliance reporting
-
-Loss of connectivity to a commercial control plane must not stop local runtime
-inference or ordinary Kubernetes reconciliation.

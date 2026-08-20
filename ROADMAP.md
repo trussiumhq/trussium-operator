@@ -453,37 +453,6 @@ required invariant.
 
 ---
 
-## Open-Source Boundary
-
-The public operator will include:
-
-- Custom resources
-- Core reconciliation
-- Runtime status
-- Configuration and Secret references
-- Production deployment settings
-- Standard runtime upgrades
-- Drift correction
-- Operator metrics
-- Installation packaging
-
-Commercial Trussium products may provide:
-
-- Multi-cluster fleet inventory
-- Central configuration management
-- Upgrade waves
-- Maintenance windows
-- Cross-cluster policy enforcement
-- Enterprise audit retention
-- Compliance reporting
-- Organization-wide approval workflows
-- Hosted control-plane services
-
-The public operator will remain independently usable without a commercial
-control plane.
-
----
-
 ## Runtime Dependency Contract
 
 The operator consumes released Trussium runtime images:
