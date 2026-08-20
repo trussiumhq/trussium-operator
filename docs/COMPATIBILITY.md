@@ -29,24 +29,18 @@ Compatibility involves:
 - Runtime health endpoint compatibility
 - Container security and execution contract compatibility
 
-## Pre-Release Compatibility
+## Released Compatibility Matrix
 
-The operator is currently pre-release.
+The following combinations are validated by the operator's release and Kind
+test suites:
 
-A version-specific compatibility guarantee has therefore not yet been
-established.
+| Operator version | Kubernetes | Runtime image contract | Status |
+|---|---|---|---|
+| v0.3.1 | >=1.25 | documented v0.x Trussium runtime contract | Tested |
 
-Current compatibility status:
-
-| Operator version | Runtime versions | Status |
-|---|---|---|
-| Pre-release | Pre-release Trussium runtime releases | Development compatibility |
-
-`Development compatibility` means the repositories are being evolved together
-and validated against their documented integration contracts.
-
-It does not currently imply long-term backward or forward compatibility across
-arbitrary pre-release revisions.
+`Tested` means the operator lifecycle is validated against Kind and the
+documented runtime integration contract. It is not a promise that every
+arbitrary runtime tag is compatible.
 
 ## Runtime Contract Expected by the Operator
 
@@ -92,20 +86,6 @@ image based on:
 
 This avoids inventing compatibility guarantees before independent operator
 releases establish a stable versioning contract.
-
-## Future Compatibility Matrix
-
-Once the operator begins independently versioned releases, this document will
-track supported combinations explicitly.
-
-For example:
-
-| Operator version | Minimum runtime | Maximum tested runtime | Status |
-|---|---|---|---|
-| Future release | TBD | TBD | TBD |
-
-Exact ranges will be added only when verified by release and end-to-end
-testing.
 
 ## Upgrade Guidance
 
