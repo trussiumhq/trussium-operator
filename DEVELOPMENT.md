@@ -108,8 +108,8 @@ A Kubernetes cluster is required:
 make run
 ```
 
-The foundation release has no Trussium custom resource or controller. The
-manager therefore starts without a Trussium reconciliation loop.
+The manager reconciles `TrussiumRuntime` resources against the connected
+Kubernetes cluster.
 
 ## Build the Manager
 
@@ -123,7 +123,22 @@ go build ./cmd/main.go
 make docker-build IMG=trussium-operator:dev
 ```
 
-Image publication will be introduced in a later milestone.
+Tagged releases publish multi-platform operator images to:
+
+```text
+ghcr.io/trussiumhq/trussium-operator:<version>
+```
+
+## Release Versioning
+
+The operator follows Semantic Versioning and uses Conventional Commits to
+derive release versions. Merges to `main` run the semantic release workflow,
+which updates `VERSION`, creates a `vMAJOR.MINOR.PATCH` Git tag and GitHub
+release, and dispatches container publication for that tag.
+
+Published images receive full, major/minor, major, and `latest` tags. Release
+images include OCI source, revision, version, and build-date metadata, plus
+SBOM and provenance attestations.
 
 ## Workflow
 
