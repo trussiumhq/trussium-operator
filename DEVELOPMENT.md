@@ -139,6 +139,16 @@ Tagged releases publish multi-platform operator images to:
 ghcr.io/trussiumhq/trussium-operator:<version>
 ```
 
+Each GitHub release also includes `install.yaml`, a single manifest containing
+the CRD and controller deployment. Generate the equivalent local bundle with:
+
+```bash
+make build-installer IMG=ghcr.io/trussiumhq/trussium-operator:v0.1.0
+```
+
+The target writes `dist/install.yaml` and leaves the tracked Kustomize files
+unchanged.
+
 ## Release Versioning
 
 The operator follows Semantic Versioning and uses Conventional Commits to

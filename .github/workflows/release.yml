@@ -29,6 +29,19 @@ jobs:
           update-file: VERSION
           allow-initial-development-versions: true
 
+      - name: Build installation bundle
+        if: steps.semantic-release.outputs.version != ''
+        env:
+          IMG: ghcr.io/${{ github.repository }}:v${{ steps.semantic-release.outputs.version }}
+        run: make build-installer IMG="$IMG"
+
+      - name: Upload installation bundle
+        if: steps.semantic-release.outputs.version != ''
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_TAG: v${{ steps.semantic-release.outputs.version }}
+        run: gh release upload "$RELEASE_TAG" dist/install.yaml --clobber
+
       - name: Dispatch container publication
         if: steps.semantic-release.outputs.version != ''
         env:

@@ -33,3 +33,6 @@ go.work.sum
 
 # Local project tools and envtest binaries
 /bin/
+
+# Generated installation bundles
+/dist/
