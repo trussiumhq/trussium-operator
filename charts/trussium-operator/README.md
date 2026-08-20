@@ -22,6 +22,8 @@ OCI distribution is added with the chart release automation.
 The controller image defaults to the chart `appVersion`. Override it with
 `image.repository` and `image.tag`; configure standard Kubernetes placement,
 resource, pull-secret, and service-account settings through `values.yaml`.
+The controller mounts its ServiceAccount token because it must authenticate to
+the Kubernetes API; managed Trussium runtime Pods remain tokenless by default.
 
 Validate local rendering with:
 

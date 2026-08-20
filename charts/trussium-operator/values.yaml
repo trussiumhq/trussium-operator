@@ -7,7 +7,7 @@ nameOverride: ""
 fullnameOverride: ""
 serviceAccount:
   create: true
-  automount: false
+  automount: true
   annotations: {}
   name: ""
 replicaCount: 1
