@@ -15,7 +15,14 @@ helm install trussium-operator ./charts/trussium-operator \
   --create-namespace
 ```
 
-OCI distribution is added with the chart release automation.
+Released chart versions are available from the OCI registry:
+
+```bash
+helm install trussium-operator oci://ghcr.io/trussiumhq/charts/trussium-operator \
+  --version <version> \
+  --namespace trussium-operator-system \
+  --create-namespace
+```
 
 ## Configuration
 
