@@ -1,5 +1,9 @@
 # Trussium Operator
 
+<p align="center">
+  <img src=".github/assets/trussium-logo.svg" alt="Trussium logo" width="144">
+</p>
+
 The Trussium Operator is the Kubernetes-native lifecycle manager for
 [Trussium](https://github.com/trussium/trussium) runtime instances.
 
