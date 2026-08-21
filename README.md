@@ -58,6 +58,10 @@ local installation.
 To limit reconciliation to a single tenant namespace, set the manager's
 `watchNamespace` Helm value. Leave it empty to watch all namespaces.
 
+For Prometheus Operator installations, the Helm chart can optionally create a
+ServiceMonitor for the authenticated HTTPS metrics endpoint. See the chart
+documentation for its TLS configuration requirements.
+
 ## Custom Resource
 
 The initial API is:

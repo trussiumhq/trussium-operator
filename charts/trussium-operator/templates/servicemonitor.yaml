@@ -1,0 +1,20 @@
+{{- if .Values.metrics.serviceMonitor.enabled }}
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: {{ include "trussium-operator.fullname" . }}-metrics
+  labels:
+    {{- include "trussium-operator.labels" . | nindent 4 }}
+spec:
+  endpoints:
+    - path: /metrics
+      port: https
+      scheme: https
+      interval: {{ .Values.metrics.serviceMonitor.interval | quote }}
+      bearerTokenFile: /var/run/secrets/kubernetes.io/serviceaccount/token
+      tlsConfig:
+        insecureSkipVerify: {{ .Values.metrics.serviceMonitor.insecureSkipVerify }}
+  selector:
+    matchLabels:
+      {{- include "trussium-operator.selectorLabels" . | nindent 6 }}
+{{- end }}

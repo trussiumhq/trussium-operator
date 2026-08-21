@@ -438,6 +438,7 @@ packaging contracts are stable.
 
 - Configurable manager watched namespace with Helm configuration and
   all-namespaces default
+- Optional Prometheus ServiceMonitor integration for operator metrics
 
 ### Potential Deliverables
 
