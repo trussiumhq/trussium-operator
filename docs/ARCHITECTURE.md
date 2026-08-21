@@ -26,6 +26,7 @@ Developer or platform engineer
              ├── Deployment
              ├── Service
              ├── PodDisruptionBudget
+             ├── Optional NetworkPolicy
              └── Status and Events
                          │
                          ▼
@@ -134,7 +135,7 @@ The operator manager will run:
 
 ## Availability Model
 
-Runtime workloads will eventually support:
+Runtime workloads support:
 
 - Multiple replicas
 - Startup, liveness, and readiness probes

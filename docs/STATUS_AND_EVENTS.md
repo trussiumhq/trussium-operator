@@ -346,18 +346,8 @@ It does not require:
 
 ## Current Boundary
 
-This milestone does not implement:
-
-- Runtime HTTP health probing
-- Direct Pod inspection
-- External provider connectivity validation
-- Credential-value validation
-- External LoadBalancer endpoint discovery
-- Production probes
-- PodDisruptionBudget
-- HorizontalPodAutoscaler
-- NetworkPolicy
-- Configuration checksum rollouts
-- Automated rollback
-
-Production workload hardening is the next milestone.
+The controller does not perform direct Pod inspection, external provider
+connectivity or credential-value validation, external LoadBalancer endpoint
+discovery, HorizontalPodAutoscaler reconciliation, egress NetworkPolicy
+management, or automated rollback. It relies on managed Deployment state and
+Kubernetes resources for observed runtime status.

@@ -23,6 +23,7 @@ import (
 
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	networkingv1 "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/tools/events"
@@ -53,6 +54,7 @@ type TrussiumRuntimeReconciler struct {
 // +kubebuilder:rbac:groups=apps,resources=deployments,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=events.k8s.io,resources=events,verbs=create;patch
 // +kubebuilder:rbac:groups=policy,resources=poddisruptionbudgets,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=networking.k8s.io,resources=networkpolicies,verbs=get;list;watch;create;update;patch;delete
 
 // Reconcile ensures that the Kubernetes resources and observed status owned by
 // a TrussiumRuntime match the custom-resource specification.
@@ -264,6 +266,15 @@ func (r *TrussiumRuntimeReconciler) reconcileCoreResources(
 	); err != nil {
 		return fmt.Errorf(
 			"reconcile PodDisruptionBudget %s/%s: %w",
+			runtimeResource.Namespace,
+			runtimeResource.Name,
+			err,
+		)
+	}
+
+	if err := r.reconcileNetworkPolicy(ctx, runtimeResource); err != nil {
+		return fmt.Errorf(
+			"reconcile NetworkPolicy %s/%s: %w",
 			runtimeResource.Namespace,
 			runtimeResource.Name,
 			err,
@@ -521,6 +532,7 @@ func (r *TrussiumRuntimeReconciler) SetupWithManager(
 		Owns(&corev1.Service{}).
 		Owns(&appsv1.Deployment{}).
 		Owns(&policyv1.PodDisruptionBudget{}).
+		Owns(&networkingv1.NetworkPolicy{}).
 		Watches(
 			&corev1.Secret{},
 			handler.EnqueueRequestsFromMapFunc(
@@ -529,6 +541,50 @@ func (r *TrussiumRuntimeReconciler) SetupWithManager(
 		).
 		Named("trussiumruntime").
 		Complete(r)
+}
+
+func (r *TrussiumRuntimeReconciler) reconcileNetworkPolicy(
+	ctx context.Context,
+	runtimeResource *runtimev1alpha1.TrussiumRuntime,
+) error {
+	if runtimeResource.Spec.NetworkPolicy == nil ||
+		!runtimeResource.Spec.NetworkPolicy.Enabled {
+		return client.IgnoreNotFound(r.Delete(
+			ctx,
+			&networkingv1.NetworkPolicy{
+				ObjectMeta: metav1.ObjectMeta{
+					Name:      runtimeResource.Name,
+					Namespace: runtimeResource.Namespace,
+				},
+			},
+		))
+	}
+
+	desired := buildNetworkPolicy(runtimeResource)
+	current := &networkingv1.NetworkPolicy{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      desired.Name,
+			Namespace: desired.Namespace,
+		},
+	}
+
+	_, err := controllerutil.CreateOrUpdate(
+		ctx,
+		r.Client,
+		current,
+		func() error {
+			current.Labels = desired.Labels
+			current.Spec = desired.Spec
+
+			return controllerutil.SetControllerReference(
+				runtimeResource,
+				current,
+				r.Scheme,
+			)
+		},
+	)
+
+	return err
 }
 
 func (r *TrussiumRuntimeReconciler) reconcilePodDisruptionBudget(

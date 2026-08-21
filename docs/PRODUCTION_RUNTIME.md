@@ -215,6 +215,7 @@ A `TrussiumRuntime` now owns:
 - Service
 - Deployment
 - PodDisruptionBudget
+- Optional NetworkPolicy
 
 All managed resources use deterministic names, stable labels, and controller
 owner references.
@@ -224,11 +225,23 @@ owner references.
 The operator has lifecycle permissions for:
 
     policy/poddisruptionbudgets
+    networking.k8s.io/networkpolicies
 
 It still requires no direct Pod permissions.
 
 The runtime workload itself receives no Kubernetes API RBAC through its
 ServiceAccount.
+
+## Optional NetworkPolicy
+
+`spec.networkPolicy` is disabled by default. When enabled, the operator owns
+an ingress-only NetworkPolicy for the runtime Pods. It accepts traffic only
+from the explicitly configured namespace and optional Pod selectors, and only
+on the runtime HTTP target port (`9000`).
+
+No egress policy is created: runtime Pods retain DNS and outbound provider
+connectivity. Operators must confirm their cluster CNI enforces Kubernetes
+NetworkPolicy resources before relying on this control.
 
 ## Configuration Boundary
 

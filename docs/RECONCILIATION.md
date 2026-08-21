@@ -205,14 +205,14 @@ The controller requires:
 - Equivalent management access for ServiceAccounts
 - Equivalent management access for Services
 - Equivalent management access for Deployments
+- Equivalent management access for PodDisruptionBudgets
+- Equivalent management access for NetworkPolicies
+- Read access to referenced Secrets
+- Status updates and Kubernetes Event creation
 
 The controller does not currently require:
 
-- Secret reads
-- Status updates
-- Kubernetes Event creation
 - Pod reads
-- PodDisruptionBudget management
 
 ## Runtime Upgrade Reconciliation
 
@@ -272,20 +272,7 @@ It does not require:
 
 ## Current Scope Boundary
 
-This reconciliation milestone does not implement:
-
-- Runtime status conditions
-- Kubernetes Events
-- Deployment rollout monitoring
-- Runtime health evaluation
-- Secret existence validation
-- Startup, readiness, or liveness probes
-- Production container security contexts
-- PodDisruptionBudget
-- Topology spreading
-- HorizontalPodAutoscaler
-- NetworkPolicy
-- Configuration checksum annotations
-- Finalizers
-
-Status and Kubernetes Events are the next milestone.
+The controller intentionally does not reconcile arbitrary Pod specifications,
+finalizers, HorizontalPodAutoscalers, or egress NetworkPolicy rules. Runtime
+NetworkPolicy support is opt-in and manages ingress only; this preserves DNS
+and provider egress while requiring explicit client selectors for ingress.

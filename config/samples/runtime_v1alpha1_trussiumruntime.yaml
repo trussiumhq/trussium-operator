@@ -23,6 +23,16 @@ spec:
     type: ClusterIP
     port: 9000
 
+  networkPolicy:
+    enabled: true
+    ingress:
+      - namespaceSelector:
+          matchLabels:
+            kubernetes.io/metadata.name: clients
+        podSelector:
+          matchLabels:
+            app.kubernetes.io/component: gateway
+
   podMetadata:
     labels:
       team: ai-platform

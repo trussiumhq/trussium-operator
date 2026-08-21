@@ -21,6 +21,7 @@ import (
 	"testing"
 
 	corev1 "k8s.io/api/core/v1"
+	networkingv1 "k8s.io/api/networking/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/utils/ptr"
@@ -159,6 +160,43 @@ func TestBuildServiceAccount(t *testing.T) {
 			"unexpected image-pull Secrets: %#v",
 			serviceAccount.ImagePullSecrets,
 		)
+	}
+}
+
+func TestBuildNetworkPolicy(t *testing.T) {
+	t.Parallel()
+
+	runtimeResource := newTestRuntime()
+	runtimeResource.Spec.Service.Port = 8080
+	runtimeResource.Spec.NetworkPolicy = &runtimev1alpha1.RuntimeNetworkPolicySpec{
+		Enabled: true,
+		Ingress: []runtimev1alpha1.RuntimeNetworkPolicyIngressRule{{
+			NamespaceSelector: metav1.LabelSelector{
+				MatchLabels: map[string]string{
+					"kubernetes.io/metadata.name": "clients",
+				},
+			},
+			PodSelector: &metav1.LabelSelector{
+				MatchLabels: map[string]string{"app": "gateway"},
+			},
+		}},
+	}
+
+	policy := buildNetworkPolicy(runtimeResource)
+
+	if !reflect.DeepEqual(policy.Spec.PodSelector.MatchLabels, runtimeSelectorLabels(runtimeResource)) {
+		t.Fatalf("unexpected NetworkPolicy selector: %#v", policy.Spec.PodSelector)
+	}
+	if !reflect.DeepEqual(policy.Spec.PolicyTypes, []networkingv1.PolicyType{networkingv1.PolicyTypeIngress}) {
+		t.Fatalf("unexpected NetworkPolicy policy types: %#v", policy.Spec.PolicyTypes)
+	}
+	if len(policy.Spec.Ingress) != 1 || len(policy.Spec.Ingress[0].From) != 1 || len(policy.Spec.Ingress[0].Ports) != 1 {
+		t.Fatalf("unexpected NetworkPolicy ingress: %#v", policy.Spec.Ingress)
+	}
+
+	port := policy.Spec.Ingress[0].Ports[0]
+	if port.Protocol == nil || *port.Protocol != corev1.ProtocolTCP || port.Port == nil || port.Port.IntVal != runtimeHTTPPort {
+		t.Fatalf("unexpected NetworkPolicy port: %#v", port)
 	}
 }
 

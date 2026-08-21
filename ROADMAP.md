@@ -439,11 +439,11 @@ packaging contracts are stable.
 - Configurable manager watched namespace with Helm configuration and
   all-namespaces default
 - Optional Prometheus ServiceMonitor integration for operator metrics
+- Opt-in runtime NetworkPolicy reconciliation with explicit ingress sources
 
 ### Potential Deliverables
 
 - HorizontalPodAutoscaler reconciliation
-- NetworkPolicy reconciliation
 - Leader election
 - Configurable watched namespaces
 - Controller reconciliation metrics

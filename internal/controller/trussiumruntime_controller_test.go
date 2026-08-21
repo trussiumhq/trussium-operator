@@ -23,6 +23,7 @@ import (
 
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	networkingv1 "k8s.io/api/networking/v1"
 	policyv1 "k8s.io/api/policy/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -302,6 +303,10 @@ func newTestScheme(t *testing.T) *runtime.Scheme {
 
 	if err := policyv1.AddToScheme(scheme); err != nil {
 		t.Fatalf("register policy/v1 Kubernetes API: %v", err)
+	}
+
+	if err := networkingv1.AddToScheme(scheme); err != nil {
+		t.Fatalf("register networking/v1 Kubernetes API: %v", err)
 	}
 
 	if err := runtimev1alpha1.AddToScheme(scheme); err != nil {
@@ -1033,5 +1038,79 @@ func TestReconcileRecreatesDeletedPodDisruptionBudget(
 			"unexpected recreated PDB: %#v",
 			recreated.Spec,
 		)
+	}
+}
+
+func TestReconcileNetworkPolicyLifecycle(t *testing.T) {
+	ctx := context.Background()
+	scheme := newTestScheme(t)
+	runtimeResource := newTestRuntime()
+	runtimeResource.UID = types.UID("runtime-network-policy-owner-uid")
+	runtimeResource.Spec.NetworkPolicy = &runtimev1alpha1.RuntimeNetworkPolicySpec{
+		Enabled: true,
+		Ingress: []runtimev1alpha1.RuntimeNetworkPolicyIngressRule{{
+			NamespaceSelector: metav1.LabelSelector{
+				MatchLabels: map[string]string{
+					"kubernetes.io/metadata.name": "clients",
+				},
+			},
+		}},
+	}
+
+	kubernetesClient := fake.NewClientBuilder().
+		WithScheme(scheme).
+		WithStatusSubresource(&runtimev1alpha1.TrussiumRuntime{}).
+		WithObjects(runtimeResource).
+		Build()
+	reconciler := TrussiumRuntimeReconciler{
+		Client: kubernetesClient,
+		Scheme: scheme,
+	}
+	request := ctrl.Request{
+		NamespacedName: client.ObjectKeyFromObject(runtimeResource),
+	}
+
+	if _, err := reconciler.Reconcile(ctx, request); err != nil {
+		t.Fatalf("initial reconciliation: %v", err)
+	}
+
+	var policy networkingv1.NetworkPolicy
+	if err := kubernetesClient.Get(ctx, request.NamespacedName, &policy); err != nil {
+		t.Fatalf("get managed NetworkPolicy: %v", err)
+	}
+	if len(policy.OwnerReferences) != 1 || policy.OwnerReferences[0].UID != runtimeResource.UID {
+		t.Fatalf("unexpected NetworkPolicy owner references: %#v", policy.OwnerReferences)
+	}
+	if len(policy.Spec.Ingress) != 1 {
+		t.Fatalf("expected one ingress rule, received %#v", policy.Spec.Ingress)
+	}
+
+	policy.Spec.Ingress = nil
+	if err := kubernetesClient.Update(ctx, &policy); err != nil {
+		t.Fatalf("introduce NetworkPolicy drift: %v", err)
+	}
+	if _, err := reconciler.Reconcile(ctx, request); err != nil {
+		t.Fatalf("reconcile NetworkPolicy drift: %v", err)
+	}
+	if err := kubernetesClient.Get(ctx, request.NamespacedName, &policy); err != nil {
+		t.Fatalf("get corrected NetworkPolicy: %v", err)
+	}
+	if len(policy.Spec.Ingress) != 1 {
+		t.Fatalf("expected corrected ingress rule, received %#v", policy.Spec.Ingress)
+	}
+
+	var storedRuntime runtimev1alpha1.TrussiumRuntime
+	if err := kubernetesClient.Get(ctx, request.NamespacedName, &storedRuntime); err != nil {
+		t.Fatalf("get managed TrussiumRuntime: %v", err)
+	}
+	storedRuntime.Spec.NetworkPolicy.Enabled = false
+	if err := kubernetesClient.Update(ctx, &storedRuntime); err != nil {
+		t.Fatalf("disable NetworkPolicy: %v", err)
+	}
+	if _, err := reconciler.Reconcile(ctx, request); err != nil {
+		t.Fatalf("reconcile disabled NetworkPolicy: %v", err)
+	}
+	if err := kubernetesClient.Get(ctx, request.NamespacedName, &policy); !apierrors.IsNotFound(err) {
+		t.Fatalf("expected NetworkPolicy deletion, received: %v", err)
 	}
 }

@@ -100,11 +100,18 @@ For every `TrussiumRuntime`, the operator manages:
 - Service
 - Deployment
 - PodDisruptionBudget
+- Optional NetworkPolicy
 
 The controller uses stable labels, controller owner references, deterministic
 resource names, and create-or-update reconciliation.
 
 It recreates deleted managed resources and corrects configuration drift.
+
+NetworkPolicy reconciliation is opt-in. When enabled for a runtime, the
+operator restricts ingress to explicit client selectors on the runtime Service
+port while leaving egress unrestricted for DNS and provider connectivity. See
+[docs/CUSTOM_RESOURCE.md](docs/CUSTOM_RESOURCE.md#specnetworkpolicy) for the
+full contract and CNI prerequisite.
 
 See [docs/RECONCILIATION.md](docs/RECONCILIATION.md) for the reconciliation
 contract.
