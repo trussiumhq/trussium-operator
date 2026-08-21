@@ -36,6 +36,13 @@ Set `watchNamespace` to reconcile `TrussiumRuntime` resources in one namespace.
 The default empty value watches all namespaces. Namespace scoping limits the
 manager cache and watches; the chart's cluster-scoped RBAC remains unchanged.
 
+## Prometheus ServiceMonitor
+
+Set `metrics.serviceMonitor.enabled=true` when the Prometheus Operator CRDs are
+installed. The ServiceMonitor scrapes the authenticated HTTPS metrics endpoint.
+Its default `insecureSkipVerify=true` supports the controller's self-signed
+certificate; set it to `false` only after configuring a trusted certificate.
+
 Validate local rendering with:
 
 ```bash
