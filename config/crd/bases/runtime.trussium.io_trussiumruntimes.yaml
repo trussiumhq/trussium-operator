@@ -60,6 +60,43 @@ spec:
           spec:
             description: Spec defines the desired runtime configuration.
             properties:
+              autoscaling:
+                description: Autoscaling configures optional CPU-based autoscaling
+                  for the runtime.
+                properties:
+                  enabled:
+                    default: false
+                    description: Enabled controls whether the operator reconciles
+                      a HorizontalPodAutoscaler.
+                    type: boolean
+                  maxReplicas:
+                    default: 10
+                    description: MaxReplicas is the upper replica bound enforced by
+                      the autoscaler.
+                    format: int32
+                    maximum: 1000
+                    minimum: 1
+                    type: integer
+                  minReplicas:
+                    default: 1
+                    description: MinReplicas is the lower replica bound enforced by
+                      the autoscaler.
+                    format: int32
+                    maximum: 1000
+                    minimum: 1
+                    type: integer
+                  targetCPUUtilizationPercentage:
+                    default: 80
+                    description: TargetCPUUtilizationPercentage is the average CPU
+                      utilization target.
+                    format: int32
+                    maximum: 100
+                    minimum: 1
+                    type: integer
+                type: object
+                x-kubernetes-validations:
+                - message: maxReplicas must be greater than or equal to minReplicas
+                  rule: self.maxReplicas >= self.minReplicas
               image:
                 description: Image selects the released Trussium runtime container
                   image.

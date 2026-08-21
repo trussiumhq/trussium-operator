@@ -216,6 +216,7 @@ A `TrussiumRuntime` now owns:
 - Deployment
 - PodDisruptionBudget
 - Optional NetworkPolicy
+- Optional HorizontalPodAutoscaler
 
 All managed resources use deterministic names, stable labels, and controller
 owner references.
@@ -226,6 +227,7 @@ The operator has lifecycle permissions for:
 
     policy/poddisruptionbudgets
     networking.k8s.io/networkpolicies
+    autoscaling/horizontalpodautoscalers
 
 It still requires no direct Pod permissions.
 
@@ -242,6 +244,14 @@ on the runtime HTTP target port (`9000`).
 No egress policy is created: runtime Pods retain DNS and outbound provider
 connectivity. Operators must confirm their cluster CNI enforces Kubernetes
 NetworkPolicy resources before relying on this control.
+
+## Optional HorizontalPodAutoscaler
+
+`spec.autoscaling` creates an owned CPU-based `autoscaling/v2`
+HorizontalPodAutoscaler for the runtime Deployment. It is disabled by default.
+Clusters need a resource metrics provider and the runtime container needs a CPU
+request for utilization-based scaling to work. The HPA owns replica changes
+while enabled; disabling autoscaling restores `spec.replicas` control.
 
 ## Configuration Boundary
 

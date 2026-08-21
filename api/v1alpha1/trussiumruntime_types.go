@@ -199,6 +199,38 @@ type RuntimeNetworkPolicySpec struct {
 	Ingress []RuntimeNetworkPolicyIngressRule `json:"ingress,omitempty"`
 }
 
+// RuntimeAutoscalingSpec configures optional CPU-based autoscaling for a
+// runtime Deployment.
+//
+// +kubebuilder:validation:XValidation:rule="self.maxReplicas >= self.minReplicas",message="maxReplicas must be greater than or equal to minReplicas"
+type RuntimeAutoscalingSpec struct {
+	// Enabled controls whether the operator reconciles a HorizontalPodAutoscaler.
+	// +optional
+	// +kubebuilder:default=false
+	Enabled bool `json:"enabled,omitempty"`
+
+	// MinReplicas is the lower replica bound enforced by the autoscaler.
+	// +optional
+	// +kubebuilder:default=1
+	// +kubebuilder:validation:Minimum=1
+	// +kubebuilder:validation:Maximum=1000
+	MinReplicas int32 `json:"minReplicas,omitempty"`
+
+	// MaxReplicas is the upper replica bound enforced by the autoscaler.
+	// +optional
+	// +kubebuilder:default=10
+	// +kubebuilder:validation:Minimum=1
+	// +kubebuilder:validation:Maximum=1000
+	MaxReplicas int32 `json:"maxReplicas,omitempty"`
+
+	// TargetCPUUtilizationPercentage is the average CPU utilization target.
+	// +optional
+	// +kubebuilder:default=80
+	// +kubebuilder:validation:Minimum=1
+	// +kubebuilder:validation:Maximum=100
+	TargetCPUUtilizationPercentage int32 `json:"targetCPUUtilizationPercentage,omitempty"`
+}
+
 // PodMetadataSpec defines additional metadata applied to runtime Pods.
 type PodMetadataSpec struct {
 	// Labels are additional labels applied to the runtime Pod template.
@@ -265,6 +297,10 @@ type TrussiumRuntimeSpec struct {
 	// NetworkPolicy configures optional ingress isolation for runtime Pods.
 	// +optional
 	NetworkPolicy *RuntimeNetworkPolicySpec `json:"networkPolicy,omitempty"`
+
+	// Autoscaling configures optional CPU-based autoscaling for the runtime.
+	// +optional
+	Autoscaling *RuntimeAutoscalingSpec `json:"autoscaling,omitempty"`
 
 	// Resources defines runtime-container compute resource requirements.
 	// +optional

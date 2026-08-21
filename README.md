@@ -105,6 +105,7 @@ For every `TrussiumRuntime`, the operator manages:
 - Deployment
 - PodDisruptionBudget
 - Optional NetworkPolicy
+- Optional CPU-based HorizontalPodAutoscaler
 
 The controller uses stable labels, controller owner references, deterministic
 resource names, and create-or-update reconciliation.
@@ -116,6 +117,11 @@ operator restricts ingress to explicit client selectors on the runtime Service
 port while leaving egress unrestricted for DNS and provider connectivity. See
 [docs/CUSTOM_RESOURCE.md](docs/CUSTOM_RESOURCE.md#specnetworkpolicy) for the
 full contract and CNI prerequisite.
+
+CPU autoscaling is also opt-in. It requires a resource metrics provider and a
+CPU request for the runtime container; while enabled, the HPA controls the
+Deployment replica count. See
+[docs/CUSTOM_RESOURCE.md](docs/CUSTOM_RESOURCE.md#specautoscaling).
 
 See [docs/RECONCILIATION.md](docs/RECONCILIATION.md) for the reconciliation
 contract.

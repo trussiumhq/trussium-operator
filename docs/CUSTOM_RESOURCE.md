@@ -257,6 +257,26 @@ Pods in the selected namespaces may reach the runtime. The immutable
 `kubernetes.io/metadata.name` namespace label is the recommended way to select
 a named namespace.
 
+### `spec.autoscaling`
+
+Autoscaling is disabled by default. When enabled, the operator creates an
+owned `autoscaling/v2` HorizontalPodAutoscaler that targets the managed
+Deployment and uses average CPU utilization.
+
+```yaml
+autoscaling:
+  enabled: true
+  minReplicas: 2
+  maxReplicas: 10
+  targetCPUUtilizationPercentage: 80
+```
+
+`maxReplicas` must be at least `minReplicas`. The cluster must have a resource
+metrics provider, commonly metrics-server, and the runtime container must have
+a CPU request. While autoscaling is enabled, the HPA owns the Deployment's
+replica count; the operator preserves HPA scale decisions. Disabling
+autoscaling removes the HPA and restores `spec.replicas` as the desired scale.
+
 ### `spec.resources`
 
 Uses the Kubernetes resource-requirements contract:

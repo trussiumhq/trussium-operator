@@ -33,6 +33,12 @@ spec:
           matchLabels:
             app.kubernetes.io/component: gateway
 
+  autoscaling:
+    enabled: true
+    minReplicas: 2
+    maxReplicas: 10
+    targetCPUUtilizationPercentage: 80
+
   podMetadata:
     labels:
       team: ai-platform

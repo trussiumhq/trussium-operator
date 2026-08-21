@@ -273,6 +273,7 @@ It does not require:
 ## Current Scope Boundary
 
 The controller intentionally does not reconcile arbitrary Pod specifications,
-finalizers, HorizontalPodAutoscalers, or egress NetworkPolicy rules. Runtime
-NetworkPolicy support is opt-in and manages ingress only; this preserves DNS
-and provider egress while requiring explicit client selectors for ingress.
+finalizers, or egress NetworkPolicy rules. Runtime NetworkPolicy support is
+opt-in and manages ingress only; this preserves DNS and provider egress while
+requiring explicit client selectors for ingress. CPU-based HPA support is also
+opt-in and preserves the autoscaler's Deployment replica decisions.
