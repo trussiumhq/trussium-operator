@@ -22,6 +22,7 @@ import (
 	"testing"
 
 	appsv1 "k8s.io/api/apps/v1"
+	autoscalingv2 "k8s.io/api/autoscaling/v2"
 	corev1 "k8s.io/api/core/v1"
 	networkingv1 "k8s.io/api/networking/v1"
 	policyv1 "k8s.io/api/policy/v1"
@@ -299,6 +300,10 @@ func newTestScheme(t *testing.T) *runtime.Scheme {
 
 	if err := appsv1.AddToScheme(scheme); err != nil {
 		t.Fatalf("register apps/v1 Kubernetes API: %v", err)
+	}
+
+	if err := autoscalingv2.AddToScheme(scheme); err != nil {
+		t.Fatalf("register autoscaling/v2 Kubernetes API: %v", err)
 	}
 
 	if err := policyv1.AddToScheme(scheme); err != nil {

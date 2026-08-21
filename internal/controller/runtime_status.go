@@ -233,7 +233,7 @@ func observeDeploymentRollout(
 		return deploymentRolloutProgressing
 	}
 
-	desired := desiredReplicas(runtimeResource)
+	desired := desiredReplicaCount(runtimeResource, deployment)
 
 	if desired == 0 {
 		if deployment.Status.Replicas != 0 ||
@@ -386,7 +386,7 @@ func buildBaseRuntimeStatus(
 	)
 
 	deployment := observation.Deployment
-	desiredReplicaCount := desiredReplicas(runtimeResource)
+	desiredReplicaCount := desiredReplicaCount(runtimeResource, deployment)
 
 	if deployment == nil {
 		setRuntimeCondition(

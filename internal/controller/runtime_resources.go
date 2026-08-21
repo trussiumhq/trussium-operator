@@ -25,6 +25,7 @@ import (
 	"strings"
 
 	appsv1 "k8s.io/api/apps/v1"
+	autoscalingv2 "k8s.io/api/autoscaling/v2"
 	corev1 "k8s.io/api/core/v1"
 	networkingv1 "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -117,6 +118,34 @@ func desiredReplicas(
 	}
 
 	return *runtimeResource.Spec.Replicas
+}
+
+func autoscalingEnabled(runtimeResource *runtimev1alpha1.TrussiumRuntime) bool {
+	return runtimeResource.Spec.Autoscaling != nil && runtimeResource.Spec.Autoscaling.Enabled
+}
+
+func desiredAutoscalingMinReplicas(runtimeResource *runtimev1alpha1.TrussiumRuntime) int32 {
+	if runtimeResource.Spec.Autoscaling == nil || runtimeResource.Spec.Autoscaling.MinReplicas == 0 {
+		return 1
+	}
+
+	return runtimeResource.Spec.Autoscaling.MinReplicas
+}
+
+func desiredAutoscalingMaxReplicas(runtimeResource *runtimev1alpha1.TrussiumRuntime) int32 {
+	if runtimeResource.Spec.Autoscaling == nil || runtimeResource.Spec.Autoscaling.MaxReplicas == 0 {
+		return 10
+	}
+
+	return runtimeResource.Spec.Autoscaling.MaxReplicas
+}
+
+func desiredTargetCPUUtilization(runtimeResource *runtimev1alpha1.TrussiumRuntime) int32 {
+	if runtimeResource.Spec.Autoscaling == nil || runtimeResource.Spec.Autoscaling.TargetCPUUtilizationPercentage == 0 {
+		return 80
+	}
+
+	return runtimeResource.Spec.Autoscaling.TargetCPUUtilizationPercentage
 }
 
 // desiredServiceType returns the schema default when a non-defaulted object is
@@ -416,7 +445,7 @@ func buildDeployment(
 			Labels:    labels,
 		},
 		Spec: appsv1.DeploymentSpec{
-			Replicas: ptr.To(desiredReplicas(runtimeResource)),
+			Replicas: ptr.To(initialDeploymentReplicas(runtimeResource)),
 			ProgressDeadlineSeconds: ptr.To(
 				deploymentProgressDeadlineSeconds,
 			),
@@ -571,6 +600,24 @@ func buildDeployment(
 	}
 }
 
+func initialDeploymentReplicas(runtimeResource *runtimev1alpha1.TrussiumRuntime) int32 {
+	if autoscalingEnabled(runtimeResource) {
+		return desiredAutoscalingMinReplicas(runtimeResource)
+	}
+
+	return desiredReplicas(runtimeResource)
+}
+
+// desiredReplicaCount returns the current HPA-selected Deployment scale when
+// autoscaling is enabled; otherwise it returns the Runtime's declared scale.
+func desiredReplicaCount(runtimeResource *runtimev1alpha1.TrussiumRuntime, deployment *appsv1.Deployment) int32 {
+	if autoscalingEnabled(runtimeResource) && deployment != nil && deployment.Spec.Replicas != nil {
+		return *deployment.Spec.Replicas
+	}
+
+	return initialDeploymentReplicas(runtimeResource)
+}
+
 func buildPodDisruptionBudget(
 	runtimeResource *runtimev1alpha1.TrussiumRuntime,
 ) *policyv1.PodDisruptionBudget {
@@ -635,6 +682,18 @@ func buildNetworkPolicy(
 				networkingv1.PolicyTypeIngress,
 			},
 			Ingress: ingressRules,
+		},
+	}
+}
+
+func buildHorizontalPodAutoscaler(runtimeResource *runtimev1alpha1.TrussiumRuntime) *autoscalingv2.HorizontalPodAutoscaler {
+	return &autoscalingv2.HorizontalPodAutoscaler{
+		ObjectMeta: metav1.ObjectMeta{Name: runtimeResource.Name, Namespace: runtimeResource.Namespace, Labels: runtimeLabels(runtimeResource)},
+		Spec: autoscalingv2.HorizontalPodAutoscalerSpec{
+			ScaleTargetRef: autoscalingv2.CrossVersionObjectReference{APIVersion: "apps/v1", Kind: "Deployment", Name: runtimeResource.Name},
+			MinReplicas:    ptr.To(desiredAutoscalingMinReplicas(runtimeResource)),
+			MaxReplicas:    desiredAutoscalingMaxReplicas(runtimeResource),
+			Metrics:        []autoscalingv2.MetricSpec{{Type: autoscalingv2.ResourceMetricSourceType, Resource: &autoscalingv2.ResourceMetricSource{Name: corev1.ResourceCPU, Target: autoscalingv2.MetricTarget{Type: autoscalingv2.UtilizationMetricType, AverageUtilization: ptr.To(desiredTargetCPUUtilization(runtimeResource))}}}},
 		},
 	}
 }

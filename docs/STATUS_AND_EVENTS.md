@@ -348,6 +348,7 @@ It does not require:
 
 The controller does not perform direct Pod inspection, external provider
 connectivity or credential-value validation, external LoadBalancer endpoint
-discovery, HorizontalPodAutoscaler reconciliation, egress NetworkPolicy
-management, or automated rollback. It relies on managed Deployment state and
-Kubernetes resources for observed runtime status.
+discovery, egress NetworkPolicy management, or automated rollback. It relies
+on managed Deployment state and Kubernetes resources for observed runtime
+status; when HPA is enabled, readiness reflects the HPA-selected replica
+count.

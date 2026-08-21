@@ -440,10 +440,10 @@ packaging contracts are stable.
   all-namespaces default
 - Optional Prometheus ServiceMonitor integration for operator metrics
 - Opt-in runtime NetworkPolicy reconciliation with explicit ingress sources
+- Opt-in CPU-based HorizontalPodAutoscaler reconciliation
 
 ### Potential Deliverables
 
-- HorizontalPodAutoscaler reconciliation
 - Leader election
 - Configurable watched namespaces
 - Controller reconciliation metrics

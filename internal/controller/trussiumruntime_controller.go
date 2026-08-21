@@ -22,6 +22,7 @@ import (
 	"fmt"
 
 	appsv1 "k8s.io/api/apps/v1"
+	autoscalingv2 "k8s.io/api/autoscaling/v2"
 	corev1 "k8s.io/api/core/v1"
 	networkingv1 "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -55,6 +56,7 @@ type TrussiumRuntimeReconciler struct {
 // +kubebuilder:rbac:groups=events.k8s.io,resources=events,verbs=create;patch
 // +kubebuilder:rbac:groups=policy,resources=poddisruptionbudgets,verbs=get;list;watch;create;update;patch;delete
 // +kubebuilder:rbac:groups=networking.k8s.io,resources=networkpolicies,verbs=get;list;watch;create;update;patch;delete
+// +kubebuilder:rbac:groups=autoscaling,resources=horizontalpodautoscalers,verbs=get;list;watch;create;update;patch;delete
 
 // Reconcile ensures that the Kubernetes resources and observed status owned by
 // a TrussiumRuntime match the custom-resource specification.
@@ -281,6 +283,10 @@ func (r *TrussiumRuntimeReconciler) reconcileCoreResources(
 		)
 	}
 
+	if err := r.reconcileHorizontalPodAutoscaler(ctx, runtimeResource); err != nil {
+		return fmt.Errorf("reconcile HorizontalPodAutoscaler %s/%s: %w", runtimeResource.Namespace, runtimeResource.Name, err)
+	}
+
 	return nil
 }
 
@@ -453,8 +459,12 @@ func (r *TrussiumRuntimeReconciler) reconcileDeployment(
 		r.Client,
 		current,
 		func() error {
+			currentReplicas := current.Spec.Replicas
 			current.Labels = desired.Labels
 			current.Spec = desired.Spec
+			if autoscalingEnabled(runtimeResource) && currentReplicas != nil {
+				current.Spec.Replicas = currentReplicas
+			}
 
 			return controllerutil.SetControllerReference(
 				runtimeResource,
@@ -533,6 +543,7 @@ func (r *TrussiumRuntimeReconciler) SetupWithManager(
 		Owns(&appsv1.Deployment{}).
 		Owns(&policyv1.PodDisruptionBudget{}).
 		Owns(&networkingv1.NetworkPolicy{}).
+		Owns(&autoscalingv2.HorizontalPodAutoscaler{}).
 		Watches(
 			&corev1.Secret{},
 			handler.EnqueueRequestsFromMapFunc(
@@ -541,6 +552,21 @@ func (r *TrussiumRuntimeReconciler) SetupWithManager(
 		).
 		Named("trussiumruntime").
 		Complete(r)
+}
+
+func (r *TrussiumRuntimeReconciler) reconcileHorizontalPodAutoscaler(ctx context.Context, runtimeResource *runtimev1alpha1.TrussiumRuntime) error {
+	if !autoscalingEnabled(runtimeResource) {
+		return client.IgnoreNotFound(r.Delete(ctx, &autoscalingv2.HorizontalPodAutoscaler{ObjectMeta: metav1.ObjectMeta{Name: runtimeResource.Name, Namespace: runtimeResource.Namespace}}))
+	}
+
+	desired := buildHorizontalPodAutoscaler(runtimeResource)
+	current := &autoscalingv2.HorizontalPodAutoscaler{ObjectMeta: metav1.ObjectMeta{Name: desired.Name, Namespace: desired.Namespace}}
+	_, err := controllerutil.CreateOrUpdate(ctx, r.Client, current, func() error {
+		current.Labels = desired.Labels
+		current.Spec = desired.Spec
+		return controllerutil.SetControllerReference(runtimeResource, current, r.Scheme)
+	})
+	return err
 }
 
 func (r *TrussiumRuntimeReconciler) reconcileNetworkPolicy(
