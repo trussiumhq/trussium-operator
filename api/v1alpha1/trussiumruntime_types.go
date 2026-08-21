@@ -165,6 +165,40 @@ type RuntimeServiceSpec struct {
 	Port int32 `json:"port,omitempty"`
 }
 
+// RuntimeNetworkPolicyIngressRule defines an explicit source that may reach
+// the runtime HTTP Service port.
+type RuntimeNetworkPolicyIngressRule struct {
+	// NamespaceSelector selects namespaces containing allowed clients.
+	//
+	// Use the immutable kubernetes.io/metadata.name namespace label when a
+	// specific namespace should be allowed.
+	NamespaceSelector metav1.LabelSelector `json:"namespaceSelector"`
+
+	// PodSelector optionally narrows allowed clients within the selected
+	// namespaces. When omitted, every Pod in a selected namespace is allowed.
+	// +optional
+	PodSelector *metav1.LabelSelector `json:"podSelector,omitempty"`
+}
+
+// RuntimeNetworkPolicySpec configures optional network isolation for runtime
+// Pods. Egress remains unrestricted so runtime Pods can resolve DNS and reach
+// their configured provider endpoints.
+//
+// +kubebuilder:validation:XValidation:rule="!self.enabled || size(self.ingress) > 0",message="at least one ingress rule is required when networkPolicy.enabled is true"
+type RuntimeNetworkPolicySpec struct {
+	// Enabled controls whether the operator reconciles a NetworkPolicy for this
+	// runtime. It is disabled by default to preserve existing connectivity.
+	// +optional
+	// +kubebuilder:default=false
+	Enabled bool `json:"enabled,omitempty"`
+
+	// Ingress defines the explicit client sources allowed to reach the runtime
+	// Service port when network policy is enabled.
+	// +optional
+	// +listType=atomic
+	Ingress []RuntimeNetworkPolicyIngressRule `json:"ingress,omitempty"`
+}
+
 // PodMetadataSpec defines additional metadata applied to runtime Pods.
 type PodMetadataSpec struct {
 	// Labels are additional labels applied to the runtime Pod template.
@@ -227,6 +261,10 @@ type TrussiumRuntimeSpec struct {
 	// +optional
 	// +kubebuilder:default={}
 	Service RuntimeServiceSpec `json:"service,omitempty"`
+
+	// NetworkPolicy configures optional ingress isolation for runtime Pods.
+	// +optional
+	NetworkPolicy *RuntimeNetworkPolicySpec `json:"networkPolicy,omitempty"`
 
 	// Resources defines runtime-container compute resource requirements.
 	// +optional

@@ -228,6 +228,35 @@ Supported Service types are:
 `ExternalName` is not supported because TrussiumRuntime Services select
 operator-managed runtime pods.
 
+### `spec.networkPolicy`
+
+NetworkPolicy is disabled by default, preserving the runtime's existing
+network connectivity. Enable it only on clusters whose CNI enforces the
+standard Kubernetes `NetworkPolicy` API.
+
+When enabled, `ingress` must contain one or more explicit client sources. The
+operator creates an owned `networking.k8s.io/v1` NetworkPolicy that selects
+only the runtime Pods and permits TCP traffic only to the runtime HTTP target
+port (`9000`). Egress remains unrestricted so the runtime can resolve DNS and
+contact its configured provider endpoint.
+
+```yaml
+networkPolicy:
+  enabled: true
+  ingress:
+    - namespaceSelector:
+        matchLabels:
+          kubernetes.io/metadata.name: clients
+      podSelector:
+        matchLabels:
+          app.kubernetes.io/component: gateway
+```
+
+`namespaceSelector` is required. `podSelector` is optional; when omitted, all
+Pods in the selected namespaces may reach the runtime. The immutable
+`kubernetes.io/metadata.name` namespace label is the recommended way to select
+a named namespace.
+
 ### `spec.resources`
 
 Uses the Kubernetes resource-requirements contract:
@@ -352,3 +381,15 @@ continues to exist.
 
 The PodDisruptionBudget is deleted through Kubernetes owner-reference garbage
 collection when the `TrussiumRuntime` is deleted.
+
+## NetworkPolicy Reconciliation
+
+When `spec.networkPolicy.enabled` is `true`, each `TrussiumRuntime` owns one
+`networking.k8s.io/v1` NetworkPolicy with the same name and namespace. The
+policy has an ingress-only `policyTypes` list, stable runtime selector labels,
+and one TCP allow rule to the fixed runtime HTTP target port per
+`spec.networkPolicy.ingress` entry.
+
+The controller corrects drift and recreates a deleted policy. Disabling the
+feature removes the managed NetworkPolicy. Egress is intentionally not
+isolated in this initial contract.

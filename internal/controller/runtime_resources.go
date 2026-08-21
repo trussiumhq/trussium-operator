@@ -26,6 +26,7 @@ import (
 
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
+	networkingv1 "k8s.io/api/networking/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/utils/ptr"
@@ -586,6 +587,54 @@ func buildPodDisruptionBudget(
 			Selector: &metav1.LabelSelector{
 				MatchLabels: runtimeSelectorLabels(runtimeResource),
 			},
+		},
+	}
+}
+
+func buildNetworkPolicy(
+	runtimeResource *runtimev1alpha1.TrussiumRuntime,
+) *networkingv1.NetworkPolicy {
+	ingressRules := make(
+		[]networkingv1.NetworkPolicyIngressRule,
+		0,
+		len(runtimeResource.Spec.NetworkPolicy.Ingress),
+	)
+
+	for _, ingress := range runtimeResource.Spec.NetworkPolicy.Ingress {
+		peer := networkingv1.NetworkPolicyPeer{
+			NamespaceSelector: ingress.NamespaceSelector.DeepCopy(),
+		}
+
+		if ingress.PodSelector != nil {
+			peer.PodSelector = ingress.PodSelector.DeepCopy()
+		}
+
+		ingressRules = append(
+			ingressRules,
+			networkingv1.NetworkPolicyIngressRule{
+				From: []networkingv1.NetworkPolicyPeer{peer},
+				Ports: []networkingv1.NetworkPolicyPort{{
+					Protocol: ptr.To(corev1.ProtocolTCP),
+					Port:     ptr.To(intstr.FromInt32(runtimeHTTPPort)),
+				}},
+			},
+		)
+	}
+
+	return &networkingv1.NetworkPolicy{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      runtimeResource.Name,
+			Namespace: runtimeResource.Namespace,
+			Labels:    runtimeLabels(runtimeResource),
+		},
+		Spec: networkingv1.NetworkPolicySpec{
+			PodSelector: metav1.LabelSelector{
+				MatchLabels: runtimeSelectorLabels(runtimeResource),
+			},
+			PolicyTypes: []networkingv1.PolicyType{
+				networkingv1.PolicyTypeIngress,
+			},
+			Ingress: ingressRules,
 		},
 	}
 }
