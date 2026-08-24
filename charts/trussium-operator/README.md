@@ -36,6 +36,13 @@ Set `watchNamespace` to reconcile `TrussiumRuntime` resources in one namespace.
 The default empty value watches all namespaces. Namespace scoping limits the
 manager cache and watches; the chart's cluster-scoped RBAC remains unchanged.
 
+## Leader Election
+
+`leaderElection.enabled` defaults to `true`. Keep it enabled before increasing
+`replicaCount` above one: it ensures only one controller manager actively
+reconciles resources at a time. Set it to `false` only for a deliberate
+single-manager deployment.
+
 ## Prometheus ServiceMonitor
 
 Set `metrics.serviceMonitor.enabled=true` when the Prometheus Operator CRDs are

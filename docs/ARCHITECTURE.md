@@ -129,7 +129,7 @@ The operator manager will run:
 
 - As a non-root user
 - With minimum required Kubernetes permissions
-- With leader election in production
+- With configurable leader election, enabled by the Helm chart by default
 - With health and readiness endpoints
 - With structured controller-runtime logging
 
@@ -145,8 +145,8 @@ Runtime workloads support:
 - Graceful shutdown
 - Resource requests and limits
 
-The operator itself will use leader election when deployed with multiple
-replicas.
+The Helm chart enables leader election by default. Keep it enabled when the
+operator is deployed with multiple replicas.
 
 ## Deletion Model
 

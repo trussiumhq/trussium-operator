@@ -43,3 +43,6 @@ nodeSelector: {}
 tolerations: []
 affinity: {}
 watchNamespace: ""
+leaderElection:
+  # Keep a single active manager when more than one controller replica runs.
+  enabled: true

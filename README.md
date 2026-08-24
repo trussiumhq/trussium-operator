@@ -150,6 +150,13 @@ failures.
 
 See [docs/STATUS_AND_EVENTS.md](docs/STATUS_AND_EVENTS.md).
 
+## High Availability
+
+The Helm chart enables controller leader election by default. Set
+`replicaCount` above one only with `leaderElection.enabled=true`, which ensures
+one active manager reconciles runtime resources at a time. See the
+[chart configuration](charts/trussium-operator/README.md#leader-election).
+
 ## Repository Responsibilities
 
 This repository owns:

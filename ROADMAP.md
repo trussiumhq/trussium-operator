@@ -441,10 +441,10 @@ packaging contracts are stable.
 - Optional Prometheus ServiceMonitor integration for operator metrics
 - Opt-in runtime NetworkPolicy reconciliation with explicit ingress sources
 - Opt-in CPU-based HorizontalPodAutoscaler reconciliation
+- Configurable Helm leader election with an enabled-by-default HA-safe setting
 
 ### Potential Deliverables
 
-- Leader election
 - Configurable watched namespaces
 - Controller reconciliation metrics
 - ServiceMonitor integration
