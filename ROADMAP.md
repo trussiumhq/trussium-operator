@@ -488,5 +488,5 @@ Compatibility will be tracked by operator and runtime release:
 
 ## Immediate Priority
 
-Begin Milestone O9 with operational features that have clear user demand and
-can be validated against the released packaging contract.
+Begin Milestone O10 with release-to-release upgrade confidence validated
+against published operator and chart artifacts.

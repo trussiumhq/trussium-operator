@@ -38,3 +38,27 @@ jobs:
         run: |
           helm uninstall trussium-operator --namespace trussium-operator-helm-test --ignore-not-found
           kubectl delete namespace trussium-operator-helm-test --ignore-not-found --wait=false
+
+  upgrade:
+    name: Release-to-release upgrade smoke test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: azure/setup-helm@v5
+      - uses: helm/kind-action@v1
+        with:
+          cluster_name: trussium-operator-upgrade-ci
+      - name: Run published-chart upgrade test
+        env:
+          PREVIOUS_CHART_VERSION: 0.3.1
+        run: scripts/chart-upgrade-smoke-test.sh
+      - name: Collect upgrade diagnostics on failure
+        if: failure()
+        run: |
+          kubectl get all -n trussium-operator-upgrade-test -o wide || true
+          kubectl get events -n trussium-operator-upgrade-test --sort-by=.lastTimestamp || true
+      - name: Clean up upgrade resources
+        if: always()
+        run: |
+          helm uninstall trussium-operator --namespace trussium-operator-upgrade-test --ignore-not-found
+          kubectl delete namespace trussium-operator-upgrade-test --ignore-not-found --wait=false
