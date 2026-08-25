@@ -12,12 +12,12 @@ through GitHub Issues.
 
 ## Current Focus
 
-Milestones O1 through O9 are complete. The operator now has released
+Milestones O1 through O10 are complete. The operator now has released
 installation bundles, an OCI Helm chart, Kind lifecycle validation, operational
 extensions, and operator upgrade and compatibility guidance.
 
-The current priority is Milestone O10: release-to-release upgrade confidence
-validated against published operator and chart artifacts.
+The current focus is maintaining the published upgrade contract and evaluating
+the next API-level milestone when a concrete schema requirement emerges.
 
 ---
 
