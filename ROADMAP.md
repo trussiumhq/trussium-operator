@@ -488,12 +488,12 @@ Compatibility will be tracked by operator and runtime release:
 
 ## Immediate Priority
 
-Milestone O10 is in progress: expand release-to-release upgrade confidence
-from one published chart version to a maintained compatibility matrix.
+Milestones O1 through O10 are complete. The current priority is to maintain
+the published upgrade contract while evaluating the next API-level milestone.
 
 ### Milestone O10 — Release Upgrade Confidence
 
-**Status:** 🚧 In Progress
+**Status:** ✅ Completed
 
 ### Delivered
 
@@ -505,9 +505,9 @@ from one published chart version to a maintained compatibility matrix.
 - Helm rollback verification after each matrix upgrade
 - Versioned upgrade matrix published with each operator release
 
-### Next Priorities
+### Follow-up
 
-- Maintain a matrix of supported previous operator and chart versions
-- Validate upgrades across each supported version pair
-- Add rollback coverage for failed or incompatible upgrades
-- Publish the tested upgrade matrix with each operator release
+The compatibility matrix is maintained as supported release families change.
+The next milestone will be planned only when a new API-level requirement is
+identified that cannot be handled by the current schema and reconciliation
+contracts.
