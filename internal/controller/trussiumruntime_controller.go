@@ -20,6 +20,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	appsv1 "k8s.io/api/apps/v1"
 	autoscalingv2 "k8s.io/api/autoscaling/v2"
@@ -63,7 +64,19 @@ type TrussiumRuntimeReconciler struct {
 func (r *TrussiumRuntimeReconciler) Reconcile(
 	ctx context.Context,
 	req ctrl.Request,
-) (ctrl.Result, error) {
+) (result ctrl.Result, reconcileErr error) {
+	startedAt := time.Now()
+
+	defer func() {
+		metricResult := "success"
+		if reconcileErr != nil {
+			metricResult = "error"
+		}
+
+		runtimeReconciliationsTotal.WithLabelValues(metricResult).Inc()
+		runtimeReconciliationDurationSeconds.WithLabelValues(metricResult).Observe(time.Since(startedAt).Seconds())
+	}()
+
 	logger := log.FromContext(ctx)
 
 	var runtimeResource runtimev1alpha1.TrussiumRuntime
