@@ -429,12 +429,12 @@ Make the operator independently installable and releasable.
 
 ## Milestone O9 — Operational Extensions
 
-**Status:** 🚧 In Progress
+**Status:** ✅ Completed
 
 Add operational features after the core API, reconciliation, upgrade, and
 packaging contracts are stable.
 
-### In Progress
+### Delivered
 
 - Configurable manager watched namespace with Helm configuration and
   all-namespaces default
@@ -445,15 +445,13 @@ packaging contracts are stable.
 - Bounded-cardinality controller reconciliation metrics
 - Advisory-first runtime compatibility policy and maintained matrix guidance
 
-### Potential Deliverables
+### Deferred
 
-- Configurable watched namespaces
-- ServiceMonitor integration
-- Runtime health aggregation
-- Provider configuration validation
-- Admission webhook
-- API conversion webhook
-- Opt-in strict runtime compatibility mode after the matrix is mature
+- Admission webhook, until schema validation cannot express a required
+  invariant
+- API conversion webhook, until a second served API version needs conversion
+- Opt-in strict runtime compatibility mode, until the maintained matrix is
+  mature
 
 Webhooks will not be added until schema validation is insufficient for a
 required invariant.
