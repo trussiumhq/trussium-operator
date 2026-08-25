@@ -443,6 +443,7 @@ packaging contracts are stable.
 - Opt-in CPU-based HorizontalPodAutoscaler reconciliation
 - Configurable Helm leader election with an enabled-by-default HA-safe setting
 - Bounded-cardinality controller reconciliation metrics
+- Advisory-first runtime compatibility policy and maintained matrix guidance
 
 ### Potential Deliverables
 
@@ -452,7 +453,7 @@ packaging contracts are stable.
 - Provider configuration validation
 - Admission webhook
 - API conversion webhook
-- Runtime compatibility validation
+- Opt-in strict runtime compatibility mode after the matrix is mature
 
 Webhooks will not be added until schema validation is insufficient for a
 required invariant.
