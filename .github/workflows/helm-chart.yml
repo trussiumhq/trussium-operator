@@ -45,7 +45,15 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        previous_version: [0.3.1, 0.5.0, 0.7.0, 0.9.0]
+        include:
+          - previous_version: 0.3.1
+            namespace_suffix: 0-3-1
+          - previous_version: 0.5.0
+            namespace_suffix: 0-5-0
+          - previous_version: 0.7.0
+            namespace_suffix: 0-7-0
+          - previous_version: 0.9.0
+            namespace_suffix: 0-9-0
     steps:
       - uses: actions/checkout@v7
       - uses: azure/setup-helm@v5
@@ -55,15 +63,15 @@ jobs:
       - name: Run published-chart upgrade test
         env:
           PREVIOUS_CHART_VERSION: ${{ matrix.previous_version }}
-          UPGRADE_TEST_NAMESPACE: trussium-operator-upgrade-test-${{ matrix.previous_version }}
+          UPGRADE_TEST_NAMESPACE: trussium-operator-upgrade-test-${{ matrix.namespace_suffix }}
         run: scripts/chart-upgrade-smoke-test.sh
       - name: Collect upgrade diagnostics on failure
         if: failure()
         run: |
-          kubectl get all -n "trussium-operator-upgrade-test-${{ matrix.previous_version }}" -o wide || true
-          kubectl get events -n "trussium-operator-upgrade-test-${{ matrix.previous_version }}" --sort-by=.lastTimestamp || true
+          kubectl get all -n "trussium-operator-upgrade-test-${{ matrix.namespace_suffix }}" -o wide || true
+          kubectl get events -n "trussium-operator-upgrade-test-${{ matrix.namespace_suffix }}" --sort-by=.lastTimestamp || true
       - name: Clean up upgrade resources
         if: always()
         run: |
-          helm uninstall trussium-operator --namespace "trussium-operator-upgrade-test-${{ matrix.previous_version }}" --ignore-not-found
-          kubectl delete namespace "trussium-operator-upgrade-test-${{ matrix.previous_version }}" --ignore-not-found --wait=false
+          helm uninstall trussium-operator --namespace "trussium-operator-upgrade-test-${{ matrix.namespace_suffix }}" --ignore-not-found
+          kubectl delete namespace "trussium-operator-upgrade-test-${{ matrix.namespace_suffix }}" --ignore-not-found --wait=false
