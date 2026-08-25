@@ -62,6 +62,13 @@ jobs:
           CHART_VERSION: ${{ steps.semantic-release.outputs.version }}
         run: gh release upload "$RELEASE_TAG" "dist/trussium-operator-${CHART_VERSION}.tgz" --clobber
 
+      - name: Upload upgrade compatibility matrix
+        if: steps.semantic-release.outputs.version != ''
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RELEASE_TAG: v${{ steps.semantic-release.outputs.version }}
+        run: gh release upload "$RELEASE_TAG" docs/UPGRADE-MATRIX.md --clobber
+
       - name: Publish Helm chart to OCI registry
         if: steps.semantic-release.outputs.version != ''
         env:

@@ -503,6 +503,7 @@ from one published chart version to a maintained compatibility matrix.
 - CI validation against published OCI chart artifacts
 - Representative published-version upgrade matrix in CI
 - Helm rollback verification after each matrix upgrade
+- Versioned upgrade matrix published with each operator release
 
 ### Next Priorities
 
