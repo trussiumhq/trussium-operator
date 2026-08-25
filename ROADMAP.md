@@ -442,11 +442,11 @@ packaging contracts are stable.
 - Opt-in runtime NetworkPolicy reconciliation with explicit ingress sources
 - Opt-in CPU-based HorizontalPodAutoscaler reconciliation
 - Configurable Helm leader election with an enabled-by-default HA-safe setting
+- Bounded-cardinality controller reconciliation metrics
 
 ### Potential Deliverables
 
 - Configurable watched namespaces
-- Controller reconciliation metrics
 - ServiceMonitor integration
 - Runtime health aggregation
 - Provider configuration validation
