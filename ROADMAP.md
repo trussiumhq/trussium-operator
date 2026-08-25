@@ -501,6 +501,8 @@ from one published chart version to a maintained compatibility matrix.
 - Runtime creation before upgrading to the checked-out chart
 - Post-upgrade custom-resource and controller-rollout verification
 - CI validation against published OCI chart artifacts
+- Representative published-version upgrade matrix in CI
+- Helm rollback verification after each matrix upgrade
 
 ### Next Priorities
 

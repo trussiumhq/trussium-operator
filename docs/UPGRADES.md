@@ -19,6 +19,13 @@ helm upgrade trussium-operator oci://ghcr.io/trussiumhq/charts/trussium-operator
   --version 0.3.1 --namespace trussium-operator-system
 ```
 
+CI continuously validates release-to-release upgrades from representative
+published chart versions (`v0.3.1`, `v0.5.0`, `v0.7.0`, and `v0.9.0`) to the
+current chart. Each matrix entry creates a runtime, upgrades the operator,
+checks the managed resource and controller rollout, then rolls back to the
+previous chart revision and checks the rollout again. The matrix is updated
+as supported release families change.
+
 Before upgrading, review the target release notes and back up custom resources.
 Afterwards, confirm the controller Deployment is available and observe existing
 `TrussiumRuntime` conditions. To roll back, apply or upgrade to the previously
