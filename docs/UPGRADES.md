@@ -376,3 +376,10 @@ This milestone does not provide:
 - Semantic-version admission
 - Secret-content-triggered rollouts
 - Direct application health probing by the controller
+
+## Release-to-Release Upgrade Validation
+
+CI installs a published previous operator chart in Kind, creates a
+`TrussiumRuntime`, upgrades to the checked-out chart, and confirms that the
+custom resource and controller rollout remain available. This validates the
+upgrade contract across released chart boundaries.
