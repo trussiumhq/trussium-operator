@@ -488,5 +488,23 @@ Compatibility will be tracked by operator and runtime release:
 
 ## Immediate Priority
 
-Begin Milestone O10 with release-to-release upgrade confidence validated
-against published operator and chart artifacts.
+Milestone O10 is in progress: expand release-to-release upgrade confidence
+from one published chart version to a maintained compatibility matrix.
+
+### Milestone O10 — Release Upgrade Confidence
+
+**Status:** 🚧 In Progress
+
+### Delivered
+
+- Kind smoke test installing the published `v0.3.1` chart
+- Runtime creation before upgrading to the checked-out chart
+- Post-upgrade custom-resource and controller-rollout verification
+- CI validation against published OCI chart artifacts
+
+### Next Priorities
+
+- Maintain a matrix of supported previous operator and chart versions
+- Validate upgrades across each supported version pair
+- Add rollback coverage for failed or incompatible upgrades
+- Publish the tested upgrade matrix with each operator release
