@@ -75,8 +75,9 @@ A digest is treated as an immutable image identity.
 
 ## Enforcement
 
-The operator currently documents compatibility but does not reject a runtime
-image based on:
+The operator uses an advisory-first compatibility policy. It documents tested
+combinations and preserves support for compatible private mirrors, custom
+repositories, tags, and digests. It does not reject a runtime image based on:
 
 - Tag format
 - Semantic version
@@ -86,6 +87,16 @@ image based on:
 
 This avoids inventing compatibility guarantees before independent operator
 releases establish a stable versioning contract.
+
+## Future Strict Mode
+
+Strict compatibility enforcement is intentionally deferred. If introduced, it
+will be an explicit opt-in setting backed by a mature, maintained compatibility
+matrix. It must never silently change the current permissive default or block
+compatible private runtime builds.
+
+Until then, operators should use the released compatibility matrix as advisory
+guidance and observe `status.conditions` during image rollouts.
 
 ## Upgrade Guidance
 
