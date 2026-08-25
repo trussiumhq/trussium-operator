@@ -26,6 +26,9 @@ checks the managed resource and controller rollout, then rolls back to the
 previous chart revision and checks the rollout again. The matrix is updated
 as supported release families change.
 
+Each release also publishes the tested matrix as the
+`UPGRADE-MATRIX.md` release asset.
+
 Before upgrading, review the target release notes and back up custom resources.
 Afterwards, confirm the controller Deployment is available and observe existing
 `TrussiumRuntime` conditions. To roll back, apply or upgrade to the previously
