@@ -24,7 +24,7 @@ metadata:
 spec:
   image:
     repository: ghcr.io/trussiumhq/trussium
-    tag: v0.24.0
+    tag: v0.67.0
   provider:
     type: ollama
     model: llama3.2
