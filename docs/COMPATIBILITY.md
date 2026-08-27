@@ -38,7 +38,7 @@ The following is the current release snapshot:
 
 | Operator version | Runtime version | Runtime chart | Kubernetes | Status |
 |---|---|---|---|---|
-| v0.12.0 | v0.67.0 | v0.5.0 | >=1.25 | Tested |
+| v0.12.0 | v0.67.0 | v0.6.0 | >=1.25 | Tested |
 
 `Tested` means the operator lifecycle is validated against Kind and the
 documented runtime integration contract. It is not a promise that every
