@@ -40,7 +40,7 @@ jobs:
           set -eu
 
           title="Runtime compatibility proposal: ${RUNTIME_VERSION}"
-          existing_count="$(gh issue list --state open --search "${title} in:title" --json number --jq 'length')"
+          existing_count="$(gh issue list --repo "$GITHUB_REPOSITORY" --state open --search "${title} in:title" --json number --jq 'length')"
           if [ "$existing_count" -gt 0 ]; then
             echo "An open proposal already exists for ${RUNTIME_VERSION}; nothing to do."
             exit 0
@@ -69,4 +69,4 @@ jobs:
           or compatibility claims automatically.
           EOF
 
-          gh issue create --title "$title" --body-file "$body_file"
+          gh issue create --repo "$GITHUB_REPOSITORY" --title "$title" --body-file "$body_file"
