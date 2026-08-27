@@ -1,0 +1,79 @@
+name: Change request
+description: Propose a release-affecting or cross-repository change
+title: "change: "
+labels:
+  - enhancement
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use this form for changes that may affect the runtime, runtime Helm
+        chart, operator, Kubernetes support, or upgrade behavior.
+
+  - type: dropdown
+    id: change-class
+    attributes:
+      label: Change class
+      options:
+        - Patch/security
+        - Compatible feature
+        - Contract change
+        - Breaking change
+    validations:
+      required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem or motivation
+      description: What problem requires this change?
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed change
+      description: Describe the intended behavior and user workflow.
+    validations:
+      required: true
+
+  - type: textarea
+    id: impact
+    attributes:
+      label: Compatibility impact
+      description: Address every dimension, using No impact where applicable.
+      value: |
+        - Runtime repository/image contract:
+        - Runtime Helm chart:
+        - Operator API/controller:
+        - Kubernetes versions:
+        - Upgrade/rollback:
+        - Security/RBAC/Secrets:
+        - Documentation/roadmap:
+    validations:
+      required: true
+
+  - type: textarea
+    id: rollout
+    attributes:
+      label: Rollout and rollback
+      description: State success conditions, rollback procedure, and migration limits.
+    validations:
+      required: true
+
+  - type: textarea
+    id: out-of-scope
+    attributes:
+      label: Out of scope
+      description: What should not be included in the first implementation?
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Confirmation
+      options:
+        - label: I searched existing issues and roadmap items.
+          required: true
+        - label: I will update the compatibility manifest and documentation when applicable.
+          required: true

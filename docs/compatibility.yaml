@@ -1,0 +1,29 @@
+schemaVersion: 1
+lastValidated: "2026-08-27"
+operator:
+  version: v0.12.0
+  repository: trussiumhq/trussium-operator
+runtime:
+  repository: trussiumhq/trussium
+  image: ghcr.io/trussiumhq/trussium
+  validatedVersions:
+    - version: v0.24.0
+      status: validated
+  candidates:
+    - version: v0.67.0
+      status: pending-validation
+chart:
+  repository: trussiumhq/trussium-helm
+  chart: trussium
+  version: v0.5.0
+  runtimeAppVersion: v0.24.0
+kubernetes:
+  minimumVersion: ">=1.25"
+upgrade:
+  previousOperatorChartVersions:
+    - v0.3.1
+    - v0.5.0
+    - v0.7.0
+    - v0.9.0
+  rollbackValidated: true
+  policy: advisory
