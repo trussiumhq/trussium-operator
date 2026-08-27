@@ -1,0 +1,72 @@
+name: Runtime compatibility proposal
+
+on:
+  repository_dispatch:
+    types:
+      - runtime-release
+  workflow_dispatch:
+    inputs:
+      runtime_version:
+        description: Runtime release tag (for example, v0.68.0)
+        required: true
+        type: string
+      runtime_image:
+        description: Immutable runtime image reference
+        required: true
+        type: string
+      release_url:
+        description: Runtime release URL
+        required: false
+        type: string
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  propose:
+    name: Open compatibility proposal
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Create a deduplicated proposal issue
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RUNTIME_VERSION: ${{ github.event.client_payload.runtime_version || inputs.runtime_version }}
+          RUNTIME_IMAGE: ${{ github.event.client_payload.runtime_image || inputs.runtime_image }}
+          RELEASE_URL: ${{ github.event.client_payload.release_url || inputs.release_url }}
+          SOURCE_COMMIT: ${{ github.event.client_payload.source_commit || github.sha }}
+        run: |
+          set -eu
+
+          title="Runtime compatibility proposal: ${RUNTIME_VERSION}"
+          existing_count="$(gh issue list --state open --search "${title} in:title" --json number --jq 'length')"
+          if [ "$existing_count" -gt 0 ]; then
+            echo "An open proposal already exists for ${RUNTIME_VERSION}; nothing to do."
+            exit 0
+          fi
+
+          body_file="$(mktemp)"
+          trap 'rm -f "$body_file"' EXIT
+          cat >"$body_file" <<EOF
+          ## Runtime release detected
+
+          A new Trussium runtime release was published and needs an explicit compatibility review.
+
+          - Runtime version: \`${RUNTIME_VERSION}\`
+          - Runtime image: \`${RUNTIME_IMAGE}\`
+          - Source commit: \`${SOURCE_COMMIT}\`
+          - Release: ${RELEASE_URL:-not provided}
+
+          ## Required review
+
+          - Validate the runtime image against the operator lifecycle and upgrade matrix.
+          - Confirm the compatible Helm chart release and workload defaults.
+          - Update \`docs/compatibility.yaml\`, \`docs/COMPATIBILITY.md\`, and relevant smoke tests.
+          - Record rollout and rollback evidence before claiming the version as validated.
+
+          This issue is a proposal only. It does not change the operator image, CRD, runtime image,
+          or compatibility claims automatically.
+          EOF
+
+          gh issue create --title "$title" --body-file "$body_file"

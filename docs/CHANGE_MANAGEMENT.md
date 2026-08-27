@@ -70,6 +70,19 @@ Runtime behavior remains authoritative in the runtime repository. Chart
 packaging and chart defaults remain authoritative in the runtime Helm
 repository.
 
+## Automated runtime-release proposals
+
+The `Runtime compatibility proposal` workflow listens for a `runtime-release`
+repository-dispatch event from `trussium`. It opens one deduplicated issue per
+runtime tag with the image, release URL, source commit, and required validation
+checklist. The workflow is proposal-only: a maintainer must validate the image,
+chart, upgrade path, and rollback evidence before updating the compatibility
+manifest.
+
+The runtime repository sends the event with its `PAT` secret. That token must
+be allowed to dispatch workflows in `trussiumhq/trussium-operator`; it is not
+stored in this repository and is never written into issue content.
+
 ## Repository coordination
 
 The operator is independently released, but the following repositories define
