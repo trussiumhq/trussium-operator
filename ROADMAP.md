@@ -511,3 +511,14 @@ The compatibility matrix is maintained as supported release families change.
 The next milestone will be planned only when a new API-level requirement is
 identified that cannot be handled by the current schema and reconciliation
 contracts.
+
+### Milestone O11 — Cross-Repository Change Management
+
+**Status:** 🚧 In Progress
+
+### Initial scope
+
+- Lightweight change classes and impact records
+- Machine-readable compatibility source of truth
+- Release and rollback gates for cross-repository changes
+- Runtime, chart, and operator coordination guidance

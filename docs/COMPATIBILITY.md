@@ -31,12 +31,14 @@ Compatibility involves:
 
 ## Released Compatibility Matrix
 
-The following combinations are validated by the operator's release and Kind
-test suites:
+The machine-readable source of truth is
+[`compatibility.yaml`](compatibility.yaml). It records the currently validated
+operator, runtime image, chart, Kubernetes, upgrade, and rollback combinations.
+The following is the current release snapshot:
 
-| Operator version | Kubernetes | Runtime image contract | Status |
-|---|---|---|---|
-| v0.3.1 | >=1.25 | documented v0.x Trussium runtime contract | Tested |
+| Operator version | Runtime version | Runtime chart | Kubernetes | Status |
+|---|---|---|---|---|
+| v0.12.0 | v0.24.0 | v0.5.0 | >=1.25 | Tested |
 
 `Tested` means the operator lifecycle is validated against Kind and the
 documented runtime integration contract. It is not a promise that every

@@ -40,10 +40,13 @@ Describe documentation and roadmap updates.
 
 ## Compatibility
 
+- Change class: Patch/security, Compatible feature, Contract change, or Breaking change
 - Operator compatibility impact:
 - Trussium runtime compatibility impact:
+- Runtime Helm chart compatibility impact:
 - Kubernetes compatibility impact:
 - CRD/API compatibility impact:
+- Upgrade and rollback impact:
 
 ## Security
 
@@ -57,6 +60,13 @@ Describe any effect on:
 - Supply chain
 
 Write `No security impact` where applicable.
+
+## Change management
+
+- [ ] `docs/compatibility.yaml` is updated when release compatibility changes.
+- [ ] Rollout success conditions and rollback procedure are documented.
+- [ ] Runtime and runtime Helm chart changes have linked coordination issues or PRs.
+- [ ] Documentation and roadmap are updated.
 
 ## Checklist
 
