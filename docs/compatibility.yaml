@@ -7,16 +7,13 @@ runtime:
   repository: trussiumhq/trussium
   image: ghcr.io/trussiumhq/trussium
   validatedVersions:
-    - version: v0.24.0
-      status: validated
-  candidates:
     - version: v0.67.0
-      status: pending-validation
+      status: validated
 chart:
   repository: trussiumhq/trussium-helm
   chart: trussium
   version: v0.5.0
-  runtimeAppVersion: v0.24.0
+  runtimeAppVersion: v0.67.0
 kubernetes:
   minimumVersion: ">=1.25"
 upgrade:
