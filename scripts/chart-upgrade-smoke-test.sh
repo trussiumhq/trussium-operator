@@ -4,6 +4,7 @@ set -euo pipefail
 namespace="${UPGRADE_TEST_NAMESPACE:-trussium-operator-upgrade-test}"
 release="${UPGRADE_TEST_RELEASE:-trussium-operator}"
 previous_version="${PREVIOUS_CHART_VERSION:-0.3.1}"
+runtime_tag="${TRUSSIUM_RUNTIME_TAG:-0.67.0}"
 previous_chart="/tmp/trussium-operator-${previous_version}.tgz"
 
 cleanup() {
@@ -24,7 +25,7 @@ metadata:
 spec:
   image:
     repository: ghcr.io/trussiumhq/trussium
-    tag: v0.67.0
+    tag: ${runtime_tag}
   provider:
     type: ollama
     model: llama3.2

@@ -64,6 +64,7 @@ jobs:
         env:
           PREVIOUS_CHART_VERSION: ${{ matrix.previous_version }}
           UPGRADE_TEST_NAMESPACE: trussium-operator-upgrade-test-${{ matrix.namespace_suffix }}
+          TRUSSIUM_RUNTIME_TAG: 0.69.0
         run: scripts/chart-upgrade-smoke-test.sh
       - name: Collect upgrade diagnostics on failure
         if: failure()

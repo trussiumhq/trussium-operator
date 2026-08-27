@@ -5,7 +5,7 @@ versions exercised by the release-to-release upgrade workflow.
 
 | Target operator release | Previous chart versions tested | Rollback tested |
 | --- | --- | --- |
-| v0.12.0 / current release | v0.3.1, v0.5.0, v0.7.0, v0.9.0 | Yes |
+| v0.13.1 / current release | v0.3.1, v0.5.0, v0.7.0, v0.9.0 | Yes |
 
 Each entry installs the published previous chart from the Trussium OCI
 registry, creates a `TrussiumRuntime`, upgrades to the current chart, verifies
