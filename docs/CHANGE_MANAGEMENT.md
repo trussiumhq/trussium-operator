@@ -69,3 +69,19 @@ tested release combinations. `COMPATIBILITY.md` and the published
 Runtime behavior remains authoritative in the runtime repository. Chart
 packaging and chart defaults remain authoritative in the runtime Helm
 repository.
+
+## Repository coordination
+
+The operator is independently released, but the following repositories define
+contracts it consumes:
+
+| Repository | Contract owned | Coordination trigger |
+|---|---|---|
+| `trussium` | Runtime image, APIs, environment, and health | Runtime contract or image change |
+| `trussium-helm` | Runtime chart and workload defaults | Chart, probe, resource, or configuration change |
+| `trussium-operator` | CRD, reconciliation, status, RBAC, and operator chart | Operator behavior or API change |
+
+Provider adapter and SDK repositories are coordinated conditionally when a
+change affects the runtime image, provider configuration, public API, or
+compatibility matrix. Consumer applications are not part of the core release
+gate unless their integration contract is changing.
