@@ -38,14 +38,14 @@ The following is the current release snapshot:
 
 | Operator version | Runtime version | Runtime chart | Kubernetes | Status |
 |---|---|---|---|---|
-| v0.13.1 | v0.69.0 | v0.10.0 | >=1.25 | Tested |
+| v0.13.1 | v0.98.0 | v0.10.0 | >=1.25 | Tested |
 
 `Tested` means the operator lifecycle is validated against Kind and the
 documented runtime integration contract. It is not a promise that every
 arbitrary runtime tag is compatible.
 
-The `0.69.0` validation uses an explicit runtime image override with chart
-`0.10.0`; that chart's built-in `appVersion` remains `0.67.0`.
+The `0.98.0` validation uses an explicit runtime image override with chart
+`0.10.0`, whose built-in `appVersion` is also `0.98.0`.
 
 ## Runtime Contract Expected by the Operator
 
@@ -68,7 +68,7 @@ Upgrade lifecycle tracking operates on the complete rendered image reference.
 
 Supported examples include:
 
-    ghcr.io/trussiumhq/trussium:0.69.0
+    ghcr.io/trussiumhq/trussium:0.98.0
 
 and:
 
