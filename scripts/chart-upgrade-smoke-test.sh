@@ -4,7 +4,7 @@ set -euo pipefail
 namespace="${UPGRADE_TEST_NAMESPACE:-trussium-operator-upgrade-test}"
 release="${UPGRADE_TEST_RELEASE:-trussium-operator}"
 previous_version="${PREVIOUS_CHART_VERSION:-0.3.1}"
-runtime_tag="${TRUSSIUM_RUNTIME_TAG:-0.98.0}"
+runtime_tag="${TRUSSIUM_RUNTIME_TAG:-0.98.1}"
 previous_chart="/tmp/trussium-operator-${previous_version}.tgz"
 
 cleanup() {
