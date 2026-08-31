@@ -32,7 +32,10 @@ spec:
 YAML
 
 kubectl get trussiumruntime upgrade-smoke --namespace "$namespace"
-helm upgrade "$release" charts/trussium-operator --namespace "$namespace" --wait --timeout=3m
+# The upgrade matrix runs before the candidate image is published. Use the
+# latest published operator image while validating the chart transition.
+helm upgrade "$release" charts/trussium-operator --namespace "$namespace" \
+  --set image.tag=0.14.0 --wait --timeout=3m
 kubectl get trussiumruntime upgrade-smoke --namespace "$namespace"
 kubectl rollout status deployment/"$release-trussium-operator" --namespace "$namespace" --timeout=2m
 
