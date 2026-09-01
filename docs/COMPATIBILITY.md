@@ -39,6 +39,7 @@ The following is the current release snapshot:
 | Operator version | Runtime version | Runtime chart | Kubernetes | Status |
 |---|---|---|---|---|
 | v1.0.0 | v1.0.0 | v1.0.0 | >=1.25 | Tested |
+| v1.0.0 | v1.17.0 | v1.1.0 | >=1.25 | Proposed |
 
 `Tested` means the operator lifecycle is validated against Kind and the
 documented runtime integration contract. It is not a promise that every
@@ -46,6 +47,10 @@ arbitrary runtime tag is compatible.
 
 The `1.0.0` validation uses the stable runtime image and chart contract with
 an explicit runtime image override for lifecycle testing.
+
+The `v1.17.0` / `v1.1.0` row is a compatibility proposal. It must not be
+treated as tested until the runtime workload reaches its health contract in a
+real Operator lifecycle test.
 
 ## Runtime Contract Expected by the Operator
 
