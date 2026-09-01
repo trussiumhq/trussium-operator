@@ -18,12 +18,15 @@ runtime:
     - version: v1.0.0
       imageTag: 1.0.0
       status: validated
+    - version: v1.17.0
+      imageTag: 1.17.0
+      status: proposed
 chart:
   repository: trussiumhq/trussium-helm
   chart: trussium
-  version: v1.0.0
-  runtimeAppVersion: v1.0.0
-  validatedRuntimeOverride: 1.0.0
+  version: v1.1.0
+  runtimeAppVersion: v1.17.0
+  validatedRuntimeOverride: 1.17.0
 kubernetes:
   minimumVersion: ">=1.25"
 upgrade:
