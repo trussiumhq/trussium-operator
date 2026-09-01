@@ -1,5 +1,5 @@
 schemaVersion: 1
-lastValidated: "2026-08-31"
+lastValidated: "2026-09-02"
 operator:
   version: v1.0.0
   repository: trussiumhq/trussium-operator
@@ -20,7 +20,7 @@ runtime:
       status: validated
     - version: v1.17.0
       imageTag: 1.17.0
-      status: proposed
+      status: validated
 chart:
   repository: trussiumhq/trussium-helm
   chart: trussium
