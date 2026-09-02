@@ -23,7 +23,7 @@ runtime:
       status: validated
     - version: v1.22.0
       imageTag: 1.22.0
-      status: proposed
+      status: validated
 chart:
   repository: trussiumhq/trussium-helm
   chart: trussium
