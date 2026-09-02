@@ -40,6 +40,7 @@ The following is the current release snapshot:
 |---|---|---|---|---|
 | v1.0.0 | v1.0.0 | v1.0.0 | >=1.25 | Tested |
 | v1.0.0 | v1.17.0 | v1.1.0 | >=1.25 | Tested |
+| v1.0.1 | v1.22.0 | v1.1.0 | >=1.25 | Proposed |
 
 `Tested` means the operator lifecycle is validated against Kind and the
 documented runtime integration contract. It is not a promise that every
@@ -48,9 +49,10 @@ arbitrary runtime tag is compatible.
 The `1.0.0` validation uses the stable runtime image and chart contract with
 an explicit runtime image override for lifecycle testing.
 
-The `v1.17.0` / `v1.1.0` row is validated by the real Operator E2E lifecycle:
+The `v1.17.0` / `v1.1.0` row is validated by the real Operator E2E lifecycle;
 the runtime workload is reconciled, reaches its health contract, and survives
-the tested image upgrade path in Kind.
+the tested image upgrade path in Kind. The `v1.22.0` row is proposed and is
+not yet a tested compatibility claim.
 
 ## Runtime Contract Expected by the Operator
 
