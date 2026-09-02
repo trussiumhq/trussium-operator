@@ -34,6 +34,42 @@ Afterwards, confirm the controller Deployment is available and observe existing
 `TrussiumRuntime` conditions. To roll back, apply or upgrade to the previously
 known-good operator version; do not delete CRDs as part of a rollback.
 
+### Verify an upgrade or rollback
+
+Run these checks after either operation. Substitute the namespace and
+`TrussiumRuntime` name used by your deployment:
+
+```bash
+kubectl rollout status deployment/trussium-operator-controller-manager \
+  -n trussium-operator-system --timeout=180s
+kubectl get trussiumruntime <runtime-name> -n <runtime-namespace>
+kubectl get trussiumruntime <runtime-name> -n <runtime-namespace> -o yaml
+kubectl get events -n <runtime-namespace> \
+  --field-selector involvedObject.name=<runtime-name> \
+  --sort-by=.lastTimestamp
+```
+
+The resource should report `Ready=True`; after an image transition, confirm
+`status.currentImage` and `status.lastSuccessfulImage` both contain the
+intended image and that `Upgrading` is `False` with reason `UpgradeComplete`.
+For a rollback, those fields should identify the restored known-good image.
+Investigate `Ready=False`, `Degraded=True`, `UpgradeFailed`, or recent warning
+events before sending traffic to the deployment.
+
+Verify the managed runtime itself independently from the operator controller:
+
+```bash
+kubectl port-forward svc/<runtime-service> 9000:9000 -n <runtime-namespace>
+curl -fsS http://127.0.0.1:9000/health/live
+curl -i http://127.0.0.1:9000/health/ready
+curl -sS http://127.0.0.1:9000/v1/capabilities/availability
+```
+
+The readiness response is HTTP 200 when the configured provider metadata probe
+passes and HTTP 503 when dependency-aware readiness intentionally detects an
+unavailable provider. Capability availability is informational; it does not
+replace rollout or readiness verification and does not perform inference.
+
 The Trussium Operator provides an explicit lifecycle for runtime image
 transitions managed through `TrussiumRuntime`.
 
