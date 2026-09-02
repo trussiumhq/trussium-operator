@@ -171,7 +171,7 @@ The managed Deployment:
 
 Tag-based image example:
 
-    ghcr.io/trussiumhq/trussium:v0.23.0
+    ghcr.io/trussiumhq/trussium:v1.22.0
 
 Digest-based image example:
 
