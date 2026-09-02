@@ -27,7 +27,7 @@ metadata:
 spec:
   image:
     repository: ghcr.io/trussiumhq/trussium
-    tag: v0.1.0
+    tag: v1.22.0
 
   provider:
     type: ollama
@@ -119,7 +119,7 @@ Tag example:
 ```yaml
 image:
   repository: ghcr.io/trussiumhq/trussium
-  tag: v0.10.0
+  tag: v1.22.0
 ```
 
 Digest example:
@@ -300,7 +300,7 @@ status:
   observedGeneration: 3
   readyReplicas: 2
   availableReplicas: 2
-  currentImage: ghcr.io/trussiumhq/trussium:v0.10.0
+  currentImage: ghcr.io/trussiumhq/trussium:v1.22.0
   endpoint: http://private-ai.trussium.svc.cluster.local:9000
   conditions:
     - type: Ready
@@ -326,7 +326,7 @@ Fully rendered image requested by the current `spec.image`.
 
 Example:
 
-    ghcr.io/trussiumhq/trussium:v0.24.0
+    ghcr.io/trussiumhq/trussium:v1.22.0
 
 ### `status.currentImage`
 

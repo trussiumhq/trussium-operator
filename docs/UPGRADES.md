@@ -8,7 +8,7 @@ upgrade does not modify existing `TrussiumRuntime.spec.image` values.
 For the released manifest bundle, apply the target version:
 
 ```bash
-kubectl apply -f https://github.com/trussiumhq/trussium-operator/releases/download/v0.3.1/install.yaml
+kubectl apply -f https://github.com/trussiumhq/trussium-operator/releases/download/v1.0.1/install.yaml
 kubectl rollout status deployment/trussium-operator-controller-manager -n trussium-operator-system
 ```
 
@@ -16,7 +16,7 @@ For Helm installations, upgrade to an explicit chart version:
 
 ```bash
 helm upgrade trussium-operator oci://ghcr.io/trussiumhq/charts/trussium-operator \
-  --version 0.3.1 --namespace trussium-operator-system
+  --version 1.2.0 --namespace trussium-operator-system
 ```
 
 CI continuously validates release-to-release upgrades from representative
@@ -51,7 +51,7 @@ custom-resource specification.
 
 For example:
 
-    ghcr.io/trussiumhq/trussium:v0.24.0
+    ghcr.io/trussiumhq/trussium:v1.22.0
 
 or:
 
@@ -76,15 +76,15 @@ successful runtime.
 
 Example:
 
-    desiredImage: ghcr.io/trussiumhq/trussium:v0.24.0
-    currentImage: ghcr.io/trussiumhq/trussium:v0.24.0
-    lastSuccessfulImage: ghcr.io/trussiumhq/trussium:v0.23.0
+    desiredImage: ghcr.io/trussiumhq/trussium:v1.22.0
+    currentImage: ghcr.io/trussiumhq/trussium:v1.22.0
+    lastSuccessfulImage: ghcr.io/trussiumhq/trussium:v1.17.0
 
 After successful rollout completion:
 
-    desiredImage: ghcr.io/trussiumhq/trussium:v0.24.0
-    currentImage: ghcr.io/trussiumhq/trussium:v0.24.0
-    lastSuccessfulImage: ghcr.io/trussiumhq/trussium:v0.24.0
+    desiredImage: ghcr.io/trussiumhq/trussium:v1.22.0
+    currentImage: ghcr.io/trussiumhq/trussium:v1.22.0
+    lastSuccessfulImage: ghcr.io/trussiumhq/trussium:v1.22.0
 
 ## Initial Deployment
 
