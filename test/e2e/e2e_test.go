@@ -45,8 +45,8 @@ const (
 
 	runtimeImageRepository = "ghcr.io/trussiumhq/trussium"
 
-	initialRuntimeImageTag  = "0.23.0"
-	upgradedRuntimeImageTag = "0.24.0"
+	initialRuntimeImageTag  = "1.17.0"
+	upgradedRuntimeImageTag = "1.22.0"
 
 	runtimeImage = runtimeImageRepository + ":" + initialRuntimeImageTag
 
