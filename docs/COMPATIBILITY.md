@@ -48,7 +48,7 @@ arbitrary runtime tag is compatible.
 
 Helm chart `v1.3.0` is the latest published chart and targets runtime
 `v1.22.0`. The matrix intentionally keeps `v1.1.0` for the `v1.22.0` row until
-the operator lifecycle is run against chart `v1.2.0`; do not interpret the
+the operator lifecycle is run against chart `v1.3.0`; do not interpret the
 latest published chart as lifecycle-tested by this repository.
 
 The `1.0.0` validation uses the stable runtime image and chart contract with
