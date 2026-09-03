@@ -1,7 +1,7 @@
 schemaVersion: 1
 lastValidated: "2026-09-02"
 operator:
-  version: v1.0.1
+  version: v1.0.2
   repository: trussiumhq/trussium-operator
 runtime:
   repository: trussiumhq/trussium
