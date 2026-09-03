@@ -27,9 +27,9 @@ runtime:
 chart:
   repository: trussiumhq/trussium-helm
   chart: trussium
-  version: v1.1.0
-  runtimeAppVersion: v1.17.0
-  validatedRuntimeOverride: 1.17.0
+  version: v1.3.0
+  runtimeAppVersion: v1.22.0
+  validatedRuntimeOverride: 1.22.0
 kubernetes:
   minimumVersion: ">=1.25"
 upgrade:

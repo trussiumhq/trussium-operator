@@ -85,7 +85,7 @@ Example:
     spec:
       image:
         repository: ghcr.io/trussiumhq/trussium
-        tag: v0.23.0
+        tag: v1.22.0
 
       provider:
         type: ollama
