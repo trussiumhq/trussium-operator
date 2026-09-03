@@ -5,7 +5,7 @@
 </p>
 
 The Trussium Operator is the Kubernetes-native lifecycle manager for
-[Trussium](https://github.com/trussium/trussium) runtime instances.
+[Trussium](https://github.com/trussiumhq/trussium) runtime instances.
 
 It provides a declarative Kubernetes API for deploying, configuring, upgrading,
 and observing released Trussium runtime containers.
@@ -170,7 +170,7 @@ This repository owns:
 - Operator packaging and installation
 - Runtime and operator compatibility documentation
 
-The public [`trussium`](https://github.com/trussium/trussium) repository owns:
+The public [`trussium`](https://github.com/trussiumhq/trussium) repository owns:
 
 - Runtime APIs
 - Provider adapters
