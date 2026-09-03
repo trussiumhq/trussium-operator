@@ -40,16 +40,15 @@ The following is the current release snapshot:
 |---|---|---|---|---|
 | v1.0.0 | v1.0.0 | v1.0.0 | >=1.25 | Tested |
 | v1.0.0 | v1.17.0 | v1.1.0 | >=1.25 | Tested |
-| v1.0.1 | v1.22.0 | v1.1.0 | >=1.25 | Tested |
+| v1.0.1 | v1.22.0 | v1.3.0 | >=1.25 | Tested |
 
 `Tested` means the operator lifecycle is validated against Kind and the
 documented runtime integration contract. It is not a promise that every
 arbitrary runtime tag is compatible.
 
 Helm chart `v1.3.0` is the latest published chart and targets runtime
-`v1.22.0`. The matrix intentionally keeps `v1.1.0` for the `v1.22.0` row until
-the operator lifecycle is run against chart `v1.3.0`; do not interpret the
-latest published chart as lifecycle-tested by this repository.
+`v1.22.0`. The `v1.22.0` row records the chart version used by the validated
+operator lifecycle; older rows retain their historical chart versions.
 
 The `1.0.0` validation uses the stable runtime image and chart contract with
 an explicit runtime image override for lifecycle testing.
