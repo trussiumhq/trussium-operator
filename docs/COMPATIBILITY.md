@@ -40,7 +40,7 @@ The following is the current release snapshot:
 |---|---|---|---|---|
 | v1.0.0 | v1.0.0 | v1.0.0 | >=1.25 | Tested |
 | v1.0.0 | v1.17.0 | v1.1.0 | >=1.25 | Tested |
-| v1.0.1 | v1.22.0 | v1.3.0 | >=1.25 | Tested |
+| v1.0.2 | v1.22.0 | v1.3.0 | >=1.25 | Tested |
 
 `Tested` means the operator lifecycle is validated against Kind and the
 documented runtime integration contract. It is not a promise that every
