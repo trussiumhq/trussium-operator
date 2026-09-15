@@ -78,3 +78,29 @@ jobs:
         run: |
           helm uninstall trussium-operator --namespace "trussium-operator-upgrade-test-${{ matrix.namespace_suffix }}" --ignore-not-found
           kubectl delete namespace "trussium-operator-upgrade-test-${{ matrix.namespace_suffix }}" --ignore-not-found --wait=false
+
+  runtime-compatibility:
+    name: Runtime compatibility (v1.27.0)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: azure/setup-helm@v5
+      - uses: helm/kind-action@v1
+        with:
+          cluster_name: trussium-operator-runtime-compatibility
+      - name: Run runtime compatibility lifecycle
+        env:
+          PREVIOUS_CHART_VERSION: 0.9.0
+          UPGRADE_TEST_NAMESPACE: trussium-operator-runtime-compatibility
+          TRUSSIUM_RUNTIME_TAG: 1.27.0
+        run: scripts/chart-upgrade-smoke-test.sh
+      - name: Collect compatibility diagnostics on failure
+        if: failure()
+        run: |
+          kubectl get all -n trussium-operator-runtime-compatibility -o wide || true
+          kubectl get events -n trussium-operator-runtime-compatibility --sort-by=.lastTimestamp || true
+      - name: Clean up compatibility resources
+        if: always()
+        run: |
+          helm uninstall trussium-operator --namespace trussium-operator-runtime-compatibility --ignore-not-found
+          kubectl delete namespace trussium-operator-runtime-compatibility --ignore-not-found --wait=false
