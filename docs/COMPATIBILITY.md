@@ -41,13 +41,14 @@ The following is the current release snapshot:
 | v1.0.0 | v1.0.0 | v1.0.0 | >=1.25 | Tested |
 | v1.0.0 | v1.17.0 | v1.1.0 | >=1.25 | Tested |
 | v1.0.2 | v1.22.0 | v1.3.0 | >=1.25 | Tested |
+| v1.0.2 | v1.27.0 | v1.3.0 | >=1.25 | Tested |
 
 `Tested` means the operator lifecycle is validated against Kind and the
 documented runtime integration contract. It is not a promise that every
 arbitrary runtime tag is compatible.
 
 Helm chart `v1.3.0` is the latest published chart and targets runtime
-`v1.22.0`. The `v1.22.0` row records the chart version used by the validated
+`v1.27.0`. The `v1.27.0` row records the latest runtime validated by the
 operator lifecycle; older rows retain their historical chart versions.
 
 The `1.0.0` validation uses the stable runtime image and chart contract with
@@ -56,7 +57,10 @@ an explicit runtime image override for lifecycle testing.
 The `v1.17.0` / `v1.1.0` row is validated by the real Operator E2E lifecycle;
 the runtime workload is reconciled, reaches its health contract, and survives
 the tested image upgrade path in Kind. The `v1.22.0` row is validated by the
-real Operator E2E lifecycle upgrade.
+real Operator E2E lifecycle upgrade. The `v1.27.0` row is validated by the
+Helm Chart CI runtime-compatibility job, which installs the previously
+published operator chart, reconciles a `TrussiumRuntime`, upgrades the
+operator, and verifies rollback in Kind.
 
 ## Runtime Contract Expected by the Operator
 

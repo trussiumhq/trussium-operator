@@ -1,5 +1,5 @@
 schemaVersion: 1
-lastValidated: "2026-09-02"
+lastValidated: "2026-09-15"
 operator:
   version: v1.0.2
   repository: trussiumhq/trussium-operator
@@ -24,12 +24,15 @@ runtime:
     - version: v1.22.0
       imageTag: 1.22.0
       status: validated
+    - version: v1.27.0
+      imageTag: 1.27.0
+      status: validated
 chart:
   repository: trussiumhq/trussium-helm
   chart: trussium
   version: v1.3.0
-  runtimeAppVersion: v1.22.0
-  validatedRuntimeOverride: 1.22.0
+  runtimeAppVersion: v1.27.0
+  validatedRuntimeOverride: 1.27.0
 kubernetes:
   minimumVersion: ">=1.25"
 upgrade:
