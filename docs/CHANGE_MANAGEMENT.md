@@ -70,6 +70,24 @@ Runtime behavior remains authoritative in the runtime repository. Chart
 packaging and chart defaults remain authoritative in the runtime Helm
 repository.
 
+## Current release baseline
+
+The current coordinated public baseline is:
+
+| Component | Release | Compatibility evidence |
+|---|---|---|
+| Trussium runtime | `v1.27.0` | [runtime release](https://github.com/trussiumhq/trussium/releases/tag/v1.27.0) |
+| Runtime Helm chart | `v1.3.1` | [chart release](https://github.com/trussiumhq/trussium-helm/releases/tag/v1.3.1), default runtime `1.27.0` |
+| Trussium Operator | `v1.0.3` | [operator release](https://github.com/trussiumhq/trussium-operator/releases/tag/v1.0.3) |
+| Operator Helm chart | `v1.0.2` | [compatibility matrix](COMPATIBILITY.md) |
+
+The runtime `v1.27.0` and runtime chart `v1.3.1` combination passed the
+operator Kind compatibility lifecycle, including installation, reconciliation,
+operator upgrade, and rollback. The operator release also passed the
+historical chart upgrade matrix, E2E, CodeQL, and container checks. Use the
+compatibility manifest and release notes as the source of truth when selecting
+another image or chart combination.
+
 ## Automated runtime-release proposals
 
 The `Runtime compatibility proposal` workflow listens for a `runtime-release`

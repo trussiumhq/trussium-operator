@@ -8,7 +8,7 @@ upgrade does not modify existing `TrussiumRuntime.spec.image` values.
 For the released manifest bundle, apply the target version:
 
 ```bash
-kubectl apply -f https://github.com/trussiumhq/trussium-operator/releases/download/v1.0.1/install.yaml
+kubectl apply -f https://github.com/trussiumhq/trussium-operator/releases/download/v1.0.3/install.yaml
 kubectl rollout status deployment/trussium-operator-controller-manager -n trussium-operator-system
 ```
 
@@ -16,7 +16,7 @@ For Helm installations, upgrade to an explicit chart version:
 
 ```bash
 helm upgrade trussium-operator oci://ghcr.io/trussiumhq/charts/trussium-operator \
-  --version 1.2.0 --namespace trussium-operator-system
+  --version 1.0.2 --namespace trussium-operator-system
 ```
 
 CI continuously validates release-to-release upgrades from representative
