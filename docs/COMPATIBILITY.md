@@ -41,13 +41,13 @@ The following is the current release snapshot:
 | v1.0.0 | v1.0.0 | v1.0.0 | >=1.25 | Tested |
 | v1.0.0 | v1.17.0 | v1.1.0 | >=1.25 | Tested |
 | v1.0.2 | v1.22.0 | v1.3.0 | >=1.25 | Tested |
-| v1.0.2 | v1.27.0 | v1.3.0 | >=1.25 | Tested |
+| v1.0.2 | v1.27.0 | v1.3.1 | >=1.25 | Tested |
 
 `Tested` means the operator lifecycle is validated against Kind and the
 documented runtime integration contract. It is not a promise that every
 arbitrary runtime tag is compatible.
 
-Helm chart `v1.3.0` is the latest published chart and targets runtime
+Helm chart `v1.3.1` is the latest published chart and targets runtime
 `v1.27.0`. The `v1.27.0` row records the latest runtime validated by the
 operator lifecycle; older rows retain their historical chart versions.
 

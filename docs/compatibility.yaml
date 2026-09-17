@@ -30,7 +30,7 @@ runtime:
 chart:
   repository: trussiumhq/trussium-helm
   chart: trussium
-  version: v1.3.0
+  version: v1.3.1
   runtimeAppVersion: v1.27.0
   validatedRuntimeOverride: 1.27.0
 kubernetes:
