@@ -42,12 +42,12 @@ deployment lifecycle.
 Install a released operator version with its CRDs and controller deployment:
 
 ```bash
-kubectl apply -f \
-  https://github.com/trussiumhq/trussium-operator/releases/download/v<version>/install.yaml
+kubectl apply -f https://github.com/trussiumhq/trussium-operator/releases/download/v1.0.3/install.yaml
 ```
 
-Replace `v<version>` with an operator release that includes the bundle. The
-release bundle pins the controller image to that same version.
+The example uses the current v1.0.3 release. For another version, select its
+`install.yaml` from the [operator releases](https://github.com/trussiumhq/trussium-operator/releases).
+The release bundle pins the controller image to that same version.
 
 ### Helm
 
