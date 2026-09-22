@@ -5,7 +5,7 @@
 </p>
 
 The Trussium Operator is the Kubernetes-native lifecycle manager for
-[Trussium](https://github.com/trussium/trussium) runtime instances.
+[Trussium](https://github.com/trussiumhq/trussium) runtime instances.
 
 It provides a declarative Kubernetes API for deploying, configuring, upgrading,
 and observing released Trussium runtime containers.
@@ -42,12 +42,12 @@ deployment lifecycle.
 Install a released operator version with its CRDs and controller deployment:
 
 ```bash
-kubectl apply -f \
-  https://github.com/trussiumhq/trussium-operator/releases/download/v<version>/install.yaml
+kubectl apply -f https://github.com/trussiumhq/trussium-operator/releases/download/v1.0.3/install.yaml
 ```
 
-Replace `v<version>` with an operator release that includes the bundle. The
-release bundle pins the controller image to that same version.
+The example uses the current v1.0.3 release. For another version, select its
+`install.yaml` from the [operator releases](https://github.com/trussiumhq/trussium-operator/releases).
+The release bundle pins the controller image to that same version.
 
 ### Helm
 
@@ -170,7 +170,7 @@ This repository owns:
 - Operator packaging and installation
 - Runtime and operator compatibility documentation
 
-The public [`trussium`](https://github.com/trussium/trussium) repository owns:
+The public [`trussium`](https://github.com/trussiumhq/trussium) repository owns:
 
 - Runtime APIs
 - Provider adapters
