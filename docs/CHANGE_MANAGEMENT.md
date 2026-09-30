@@ -81,8 +81,9 @@ The current coordinated public baseline is:
 | Trussium Operator | `v1.0.5` | Pending this compatibility fix and release CI |
 | Operator Helm chart | `v1.0.5` | Pending this compatibility fix and release CI |
 
-The compatibility fix grants the Helm-installed Operator the NetworkPolicy
-permissions already present in its generated install RBAC. The Kind workflow
+The compatibility fix grants the Helm-installed Operator the
+HorizontalPodAutoscaler and NetworkPolicy permissions already present in its
+generated install RBAC. The Kind workflow
 upgrades the affected released chart `v1.0.4` to the corrected candidate chart,
 then validates runtime image `1.29.1` and rollback to `1.27.0`. The Runtime
 Helm chart `v1.3.1` still defaults to `1.27.0`; the Operator test sets an

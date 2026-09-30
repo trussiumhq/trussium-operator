@@ -52,7 +52,8 @@ Runtime Helm chart `v1.3.1` is the latest published chart and its default
 `appVersion` remains `1.27.0`. The `v1.29.1` row uses an explicit
 `TrussiumRuntime.spec.image.tag` override; it does not claim that the Runtime
 Helm chart default changed. The Operator chart tested by this row is `v1.0.5`;
-it includes the missing NetworkPolicy permissions required by the controller.
+it includes the missing HorizontalPodAutoscaler and NetworkPolicy permissions
+required by the controller.
 
 The `1.0.0` validation uses the stable runtime image and chart contract with
 an explicit runtime image override for lifecycle testing.
@@ -66,7 +67,8 @@ transition.
 
 The `v1.29.1` row is validated by that Kind job by upgrading the published
 Operator chart `v1.0.4` to the candidate chart for `v1.0.5`. This corrects the
-published chart's missing NetworkPolicy permissions. The job reconciles a
+published chart's missing HorizontalPodAutoscaler and NetworkPolicy
+permissions. The job reconciles a
 runtime on image `1.27.0`, rolls forward to `1.29.1`, waits for the operator's
 Ready condition and successful-image status, then rolls the runtime image back
 to `1.27.0` and verifies the restored workload. It does not roll the operator
