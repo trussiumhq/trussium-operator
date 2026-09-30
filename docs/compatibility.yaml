@@ -1,8 +1,8 @@
 schemaVersion: 1
 lastValidated: "2026-09-30"
 operator:
-  version: v1.0.4
-  chartVersion: 1.0.4
+  version: v1.0.5
+  chartVersion: 1.0.5
   repository: trussiumhq/trussium-operator
 runtime:
   repository: trussiumhq/trussium
@@ -45,9 +45,8 @@ upgrade:
     to: 1.29.1
     rollbackTo: 1.27.0
   operatorChartTransition:
-    from: 0.9.0
-    to: 1.0.4
-    rollbackTo: 0.9.0
+    from: 1.0.4
+    to: 1.0.5
   previousOperatorChartVersions:
     - v0.3.1
     - v0.5.0

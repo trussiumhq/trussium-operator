@@ -482,7 +482,7 @@ Compatibility will be tracked by operator and runtime release:
 
 | Operator version | Supported Trussium versions |
 |---|---|
-| v1.0.4 | Runtime v1.29.1 validated with Runtime Helm chart v1.3.1; see the [compatibility matrix](docs/COMPATIBILITY.md) |
+| v1.0.5 | Runtime v1.29.1 validated with Runtime Helm chart v1.3.1 and Helm chart NetworkPolicy RBAC corrected; see the [compatibility matrix](docs/COMPATIBILITY.md) |
 
 ---
 

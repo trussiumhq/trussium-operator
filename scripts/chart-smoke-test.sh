@@ -29,3 +29,12 @@ helm install "$release" charts/trussium-operator \
 kubectl rollout status deployment/"$release-trussium-operator" \
   --namespace "$namespace" \
   --timeout=2m
+
+service_account="system:serviceaccount:${namespace}:${release}-trussium-operator"
+for verb in get list watch; do
+  if [[ "$(kubectl auth can-i "$verb" networkpolicies.networking.k8s.io \
+    --all-namespaces --as="$service_account")" != "yes" ]]; then
+    echo "Operator service account cannot ${verb} NetworkPolicies cluster-wide" >&2
+    exit 1
+  fi
+done
