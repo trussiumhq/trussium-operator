@@ -95,6 +95,7 @@ jobs:
           UPGRADE_TEST_NAMESPACE: trussium-operator-runtime-compatibility
           TRUSSIUM_RUNTIME_TAG: 1.29.1
           TRUSSIUM_RUNTIME_ROLLBACK_TAG: 1.27.0
+          VERIFY_RUNTIME_IMAGE_STATUS: "true"
         run: scripts/chart-upgrade-smoke-test.sh
       - name: Collect compatibility diagnostics on failure
         if: failure()
