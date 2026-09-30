@@ -80,7 +80,7 @@ jobs:
           kubectl delete namespace "trussium-operator-upgrade-test-${{ matrix.namespace_suffix }}" --ignore-not-found --wait=false
 
   runtime-compatibility:
-    name: Runtime compatibility (v1.27.0)
+    name: Runtime compatibility (v1.29.1)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
@@ -91,14 +91,19 @@ jobs:
       - name: Run runtime compatibility lifecycle
         env:
           PREVIOUS_CHART_VERSION: 0.9.0
+          CURRENT_OPERATOR_CHART_VERSION: 1.0.4
           UPGRADE_TEST_NAMESPACE: trussium-operator-runtime-compatibility
-          TRUSSIUM_RUNTIME_TAG: 1.27.0
+          TRUSSIUM_RUNTIME_TAG: 1.29.1
+          TRUSSIUM_RUNTIME_ROLLBACK_TAG: 1.27.0
         run: scripts/chart-upgrade-smoke-test.sh
       - name: Collect compatibility diagnostics on failure
         if: failure()
         run: |
           kubectl get all -n trussium-operator-runtime-compatibility -o wide || true
+          kubectl get trussiumruntime upgrade-smoke -n trussium-operator-runtime-compatibility -o yaml || true
+          kubectl get deployment upgrade-smoke -n trussium-operator-runtime-compatibility -o yaml || true
           kubectl get events -n trussium-operator-runtime-compatibility --sort-by=.lastTimestamp || true
+          kubectl logs deployment/upgrade-smoke -n trussium-operator-runtime-compatibility --all-containers=true --tail=100 || true
       - name: Clean up compatibility resources
         if: always()
         run: |

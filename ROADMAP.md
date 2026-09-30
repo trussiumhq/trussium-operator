@@ -482,7 +482,7 @@ Compatibility will be tracked by operator and runtime release:
 
 | Operator version | Supported Trussium versions |
 |---|---|
-| v0.3.1 | Documented v0.x runtime contract; Kubernetes >=1.25 |
+| v1.0.4 | Runtime v1.29.1 validated with Runtime Helm chart v1.3.1; see the [compatibility matrix](docs/COMPATIBILITY.md) |
 
 ---
 

@@ -76,14 +76,16 @@ The current coordinated public baseline is:
 
 | Component | Release | Compatibility evidence |
 |---|---|---|
-| Trussium runtime | `v1.27.0` | [runtime release](https://github.com/trussiumhq/trussium/releases/tag/v1.27.0) |
+| Trussium runtime | `v1.29.1` | [runtime release](https://github.com/trussiumhq/trussium/releases/tag/v1.29.1) |
 | Runtime Helm chart | `v1.3.1` | [chart release](https://github.com/trussiumhq/trussium-helm/releases/tag/v1.3.1), default runtime `1.27.0` |
-| Trussium Operator | `v1.0.3` | [operator release](https://github.com/trussiumhq/trussium-operator/releases/tag/v1.0.3) |
-| Operator Helm chart | `v1.0.2` | [compatibility matrix](COMPATIBILITY.md) |
+| Trussium Operator | `v1.0.4` | [operator release](https://github.com/trussiumhq/trussium-operator/releases/tag/v1.0.4) |
+| Operator Helm chart | `v1.0.4` | [compatibility matrix](COMPATIBILITY.md) |
 
-The runtime `v1.27.0` and runtime chart `v1.3.1` combination passed the
-operator Kind compatibility lifecycle, including installation, reconciliation,
-operator upgrade, and rollback. The operator release also passed the
+Operator compatibility CI validates runtime image `1.29.1` with the released
+Operator chart `v1.0.4` and Runtime Helm chart `v1.3.1`. The runtime chart's
+default remains `1.27.0`; the compatibility job sets an explicit image override,
+checks rollout and readiness, upgrades and rolls back the Operator chart, then
+rolls the runtime image back to `1.27.0`. The operator release also passed the
 historical chart upgrade matrix, E2E, CodeQL, and container checks. Use the
 compatibility manifest and release notes as the source of truth when selecting
 another image or chart combination.

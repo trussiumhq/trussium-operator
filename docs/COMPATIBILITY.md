@@ -36,20 +36,23 @@ The machine-readable source of truth is
 operator, runtime image, chart, Kubernetes, upgrade, and rollback combinations.
 The following is the current release snapshot:
 
-| Operator version | Runtime version | Runtime chart | Kubernetes | Status |
+| Operator release / chart | Runtime version | Runtime chart | Kubernetes | Status |
 |---|---|---|---|---|
 | v1.0.0 | v1.0.0 | v1.0.0 | >=1.25 | Tested |
 | v1.0.0 | v1.17.0 | v1.1.0 | >=1.25 | Tested |
 | v1.0.2 | v1.22.0 | v1.3.0 | >=1.25 | Tested |
 | v1.0.2 | v1.27.0 | v1.3.1 | >=1.25 | Tested |
+| v1.0.4 | v1.29.1 | v1.3.1 | >=1.25 | Tested |
 
 `Tested` means the operator lifecycle is validated against Kind and the
 documented runtime integration contract. It is not a promise that every
 arbitrary runtime tag is compatible.
 
-Helm chart `v1.3.1` is the latest published chart and targets runtime
-`v1.27.0`. The `v1.27.0` row records the latest runtime validated by the
-operator lifecycle; older rows retain their historical chart versions.
+Runtime Helm chart `v1.3.1` is the latest published chart and its default
+`appVersion` remains `1.27.0`. The `v1.29.1` row uses an explicit
+`TrussiumRuntime.spec.image.tag` override; it does not claim that the Runtime
+Helm chart default changed. The separately published Operator chart tested by
+this row is `v1.0.4`.
 
 The `1.0.0` validation uses the stable runtime image and chart contract with
 an explicit runtime image override for lifecycle testing.
@@ -61,6 +64,15 @@ real Operator E2E lifecycle upgrade. The `v1.27.0` row is validated by the
 Helm Chart CI runtime-compatibility job, which installs the previously
 published operator chart, reconciles a `TrussiumRuntime`, upgrades the
 operator, and verifies rollback in Kind.
+
+The `v1.29.1` row is validated by that Kind job using the published Operator
+chart `v1.0.4` after Operator chart `v0.9.0`. It creates a runtime on image
+`1.27.0`, rolls forward to `1.29.1`, waits for the operator's Ready condition
+and successful-image status, upgrades and rolls back the Operator chart, then
+rolls the runtime image back to `1.27.0` and verifies the restored workload.
+The Runtime Helm chart `v1.3.1` remains the referenced chart release and
+defaults to runtime `1.27.0`; the tested `1.29.1` image is an explicit
+operator-managed override.
 
 ## Runtime Contract Expected by the Operator
 
