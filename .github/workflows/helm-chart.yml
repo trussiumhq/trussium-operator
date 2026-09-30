@@ -92,7 +92,7 @@ jobs:
         env:
           PREVIOUS_CHART_VERSION: 1.0.4
           UPGRADE_TEST_NAMESPACE: trussium-operator-runtime-compatibility
-          TRUSSIUM_OPERATOR_IMAGE_TAG: v1.0.4
+          TRUSSIUM_OPERATOR_IMAGE_TAG: 1.0.4
           TRUSSIUM_RUNTIME_TAG: 1.29.1
           TRUSSIUM_RUNTIME_ROLLBACK_TAG: 1.27.0
           VERIFY_RUNTIME_IMAGE_STATUS: "true"
