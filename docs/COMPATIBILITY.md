@@ -69,7 +69,9 @@ The `v1.29.1` row is validated by that Kind job by upgrading the published
 Operator chart `v1.0.4` to the candidate chart for `v1.0.5`. This corrects the
 published chart's missing HorizontalPodAutoscaler and NetworkPolicy
 permissions. The job reconciles a
-runtime on image `1.27.0`, rolls forward to `1.29.1`, waits for the operator's
+runtime on image `1.27.0`, verifies the updated service account permissions,
+restarts the controller so its caches initialize with those permissions, rolls
+forward to `1.29.1`, and waits for the operator's
 Ready condition and successful-image status, then rolls the runtime image back
 to `1.27.0` and verifies the restored workload. It does not roll the operator
 chart back to the known-incomplete `v1.0.4` chart.

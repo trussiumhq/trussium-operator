@@ -44,7 +44,7 @@ wait_for_runtime_image() {
       -o jsonpath='{.spec.template.spec.containers[0].image}')"
     if [[ "$configured_image" != "$expected_image" ]]; then
       echo "Expected runtime Deployment image ${expected_image}, got ${configured_image}" >&2
-      return 1
+      exit 1
     fi
 
     kubectl get "trussiumruntime/${runtime_name}" \
@@ -110,10 +110,27 @@ kubectl get trussiumruntime "$runtime_name" --namespace "$namespace"
 helm upgrade "$release" charts/trussium-operator \
   --namespace "$namespace" \
   --set "image.tag=$operator_image_tag" \
-  --wait --timeout=3m
+  --timeout=3m
 
+service_account="system:serviceaccount:${namespace}:${release}-trussium-operator"
+for resource in horizontalpodautoscalers.autoscaling networkpolicies.networking.k8s.io; do
+  for verb in get list watch; do
+    if [[ "$(kubectl auth can-i "$verb" "$resource" \
+      --all-namespaces --as="$service_account")" != "yes" ]]; then
+      echo "Upgraded Operator service account cannot ${verb} ${resource} cluster-wide" >&2
+      return 1
+    fi
+  done
+done
+
+# The old controller can have informers stuck after starting without these
+# permissions. Restart only after confirming the upgraded ClusterRole grants
+# them, then wait for a clean cache sync and rollout.
+kubectl rollout restart "deployment/${release}-trussium-operator" \
+  --namespace "$namespace"
 kubectl rollout status "deployment/${release}-trussium-operator" \
-  --namespace "$namespace" --timeout=2m
+  --namespace "$namespace" --timeout=3m
+
 wait_for_runtime_image "$initial_runtime_tag"
 
 if [[ -n "$runtime_rollback_tag" ]]; then
