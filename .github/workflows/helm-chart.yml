@@ -105,6 +105,8 @@ jobs:
           kubectl get deployment upgrade-smoke -n trussium-operator-runtime-compatibility -o yaml || true
           kubectl get events -n trussium-operator-runtime-compatibility --sort-by=.lastTimestamp || true
           kubectl logs deployment/upgrade-smoke -n trussium-operator-runtime-compatibility --all-containers=true --tail=100 || true
+          kubectl logs deployment/trussium-operator-trussium-operator -n trussium-operator-runtime-compatibility --all-containers=true --tail=200 || true
+          kubectl logs deployment/trussium-operator-trussium-operator -n trussium-operator-runtime-compatibility --all-containers=true --previous --tail=200 || true
       - name: Clean up compatibility resources
         if: always()
         run: |

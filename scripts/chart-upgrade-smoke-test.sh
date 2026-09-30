@@ -22,18 +22,23 @@ wait_for_runtime_image() {
     echo "Waiting for ${runtime_name} to report successful image ${expected_image}"
     kubectl wait \
       --namespace "$namespace" \
+      --for=condition=Available \
+      --timeout=3m \
+      "deployment/${runtime_name}"
+    kubectl wait \
+      --namespace "$namespace" \
       --for="jsonpath={.status.lastSuccessfulImage}=${expected_image}" \
-      --timeout=5m \
+      --timeout=2m \
       "trussiumruntime/${runtime_name}"
     kubectl wait \
       --namespace "$namespace" \
       --for='condition=Ready' \
-      --timeout=5m \
+      --timeout=2m \
       "trussiumruntime/${runtime_name}"
     kubectl rollout status \
       "deployment/${runtime_name}" \
       --namespace "$namespace" \
-      --timeout=5m
+    --timeout=2m
 
     configured_image="$(kubectl get deployment "$runtime_name" \
       --namespace "$namespace" \
