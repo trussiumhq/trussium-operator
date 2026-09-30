@@ -76,17 +76,19 @@ The current coordinated public baseline is:
 
 | Component | Release | Compatibility evidence |
 |---|---|---|
-| Trussium runtime | `v1.27.0` | [runtime release](https://github.com/trussiumhq/trussium/releases/tag/v1.27.0) |
+| Trussium runtime | `v1.29.1` | [runtime release](https://github.com/trussiumhq/trussium/releases/tag/v1.29.1) |
 | Runtime Helm chart | `v1.3.1` | [chart release](https://github.com/trussiumhq/trussium-helm/releases/tag/v1.3.1), default runtime `1.27.0` |
-| Trussium Operator | `v1.0.3` | [operator release](https://github.com/trussiumhq/trussium-operator/releases/tag/v1.0.3) |
-| Operator Helm chart | `v1.0.2` | [compatibility matrix](COMPATIBILITY.md) |
+| Trussium Operator | `v1.0.5` | Pending this compatibility fix and release CI |
+| Operator Helm chart | `v1.0.5` | Pending this compatibility fix and release CI |
 
-The runtime `v1.27.0` and runtime chart `v1.3.1` combination passed the
-operator Kind compatibility lifecycle, including installation, reconciliation,
-operator upgrade, and rollback. The operator release also passed the
-historical chart upgrade matrix, E2E, CodeQL, and container checks. Use the
-compatibility manifest and release notes as the source of truth when selecting
-another image or chart combination.
+The compatibility fix grants the Helm-installed Operator the
+HorizontalPodAutoscaler and NetworkPolicy permissions already present in its
+generated install RBAC. The Kind workflow
+upgrades the affected released chart `v1.0.4` to the corrected candidate chart,
+then validates runtime image `1.29.1` and rollback to `1.27.0`. The Runtime
+Helm chart `v1.3.1` still defaults to `1.27.0`; the Operator test sets an
+explicit runtime image override. Version `v1.0.5` becomes the current baseline
+only after the compatibility workflow and release CI pass.
 
 ## Automated runtime-release proposals
 
