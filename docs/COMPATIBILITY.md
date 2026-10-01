@@ -66,7 +66,7 @@ Helm Chart CI runtime-compatibility job before and after the runtime image
 transition.
 
 The `v1.29.1` row is validated by that Kind job by upgrading the published
-Operator chart `v1.0.4` to the candidate chart for `v1.0.5`. This corrects the
+Operator chart `v1.0.4` to the released chart `v1.0.5`. This corrects the
 published chart's missing HorizontalPodAutoscaler and NetworkPolicy
 permissions. The job reconciles a
 runtime on image `1.27.0`, verifies the updated service account permissions,
