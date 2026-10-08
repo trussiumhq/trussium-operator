@@ -66,9 +66,11 @@ Helm Chart CI runtime-compatibility job before and after the runtime image
 transition.
 
 The `v1.29.1` row is validated by that Kind job by upgrading the published
-Operator chart `v1.0.4` to the released chart `v1.0.5`. This corrects the
-published chart's missing HorizontalPodAutoscaler and NetworkPolicy
-permissions. The job reconciles a
+Operator chart `v1.0.4` to the current chart from the checkout. The job builds
+the current operator image from that checkout and loads it into Kind, so the
+upgrade exercises the candidate controller rather than reusing the old
+`1.0.4` controller image. The chart corrects the published chart's missing
+HorizontalPodAutoscaler and NetworkPolicy permissions. The job reconciles a
 runtime on image `1.27.0`, verifies the updated service account permissions,
 restarts the controller so its caches initialize with those permissions, rolls
 forward to `1.29.1`, and waits for the operator's

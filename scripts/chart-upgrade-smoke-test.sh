@@ -6,6 +6,7 @@ release="${UPGRADE_TEST_RELEASE:-trussium-operator}"
 previous_version="${PREVIOUS_CHART_VERSION:-0.3.1}"
 runtime_tag="${TRUSSIUM_RUNTIME_TAG:-1.0.0}"
 runtime_rollback_tag="${TRUSSIUM_RUNTIME_ROLLBACK_TAG:-}"
+operator_image_repository="${TRUSSIUM_OPERATOR_IMAGE_REPOSITORY:-ghcr.io/trussiumhq/trussium-operator}"
 operator_image_tag="${TRUSSIUM_OPERATOR_IMAGE_TAG:-0.14.0}"
 verify_runtime_image_status="${VERIFY_RUNTIME_IMAGE_STATUS:-false}"
 runtime_repository="ghcr.io/trussiumhq/trussium"
@@ -109,6 +110,7 @@ kubectl get trussiumruntime "$runtime_name" --namespace "$namespace"
 
 helm upgrade "$release" charts/trussium-operator \
   --namespace "$namespace" \
+  --set "image.repository=$operator_image_repository" \
   --set "image.tag=$operator_image_tag" \
   --timeout=3m
 
