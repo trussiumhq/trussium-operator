@@ -48,6 +48,30 @@ The following is the current release snapshot:
 documented runtime integration contract. It is not a promise that every
 arbitrary runtime tag is compatible.
 
+## Runtime Release Proposal Triage
+
+Automation may open a proposal when a runtime release is published. A proposal
+is an intake signal, not a compatibility claim or an obligation to validate
+every runtime release. The operator team prioritizes releases that introduce a
+runtime contract change and representative releases needed to demonstrate the
+current integration boundary. The selected, evidence-backed combinations are
+listed in `compatibility.yaml` and the matrix above.
+
+After review, a proposal is closed in one of two ways:
+
+- **Validated:** the exact image and operator/chart combination is tested and
+  added to the compatibility matrix with upgrade and rollback evidence.
+- **Not selected:** the release is not part of the current validation set. Its
+  proposal is closed as not planned, and the release remains unvalidated by
+  this operator project. This is neither a compatibility claim nor a claim that
+  the runtime release is unsupported.
+
+A later patch or minor release does not retroactively validate earlier images.
+If a newer release is selected instead, the earlier proposal may be closed as
+superseded; only the exact versions recorded in the matrix carry validation
+evidence. Users of an unlisted version should run their own integration tests
+before production rollout.
+
 Runtime Helm chart `v1.3.1` is the latest published chart and its default
 `appVersion` remains `1.27.0`. The `v1.29.1` row uses an explicit
 `TrussiumRuntime.spec.image.tag` override; it does not claim that the Runtime
