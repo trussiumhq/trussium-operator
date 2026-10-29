@@ -1,6 +1,6 @@
 # Trussium Operator Roadmap
 
-_Last updated: August 2026_
+_Last updated: October 29, 2026_
 
 This roadmap describes the direction of the public Trussium Kubernetes
 Operator.
@@ -16,8 +16,11 @@ Milestones O1 through O10 are complete. The operator now has released
 installation bundles, an OCI Helm chart, Kind lifecycle validation, operational
 extensions, and operator upgrade and compatibility guidance.
 
-The current focus is maintaining the published upgrade contract and evaluating
-the next API-level milestone when a concrete schema requirement emerges.
+The current focus is maintaining the published upgrade contract, including
+runtime `v1.30.0` compatibility and rollback validation tracked in issue #214.
+The current chart/runtime defaults remain unchanged; compatibility claims are
+added only through the explicit Kind lifecycle evidence. The next API-level
+milestone will be evaluated when a concrete schema requirement emerges.
 
 ---
 

@@ -42,7 +42,7 @@ The following is the current release snapshot:
 | v1.0.0 | v1.17.0 | v1.1.0 | >=1.25 | Tested |
 | v1.0.2 | v1.22.0 | v1.3.0 | >=1.25 | Tested |
 | v1.0.2 | v1.27.0 | v1.3.1 | >=1.25 | Tested |
-| v1.0.5 | v1.27.0, v1.29.1 | v1.3.1 | >=1.25 | Tested |
+| v1.0.5 | v1.27.0, v1.29.1, v1.30.0 | v1.3.1 | >=1.25 | Tested |
 
 `Tested` means the operator lifecycle is validated against Kind and the
 documented runtime integration contract. It is not a promise that every
@@ -65,21 +65,23 @@ real Operator E2E lifecycle upgrade. The `v1.27.0` baseline is checked in the
 Helm Chart CI runtime-compatibility job before and after the runtime image
 transition.
 
-The `v1.29.1` row is validated by that Kind job by upgrading the published
-Operator chart `v1.0.4` to the current chart from the checkout. The job builds
-the current operator image from that checkout and loads it into Kind, so the
+The `v1.29.1` and `v1.30.0` rows are validated by the Kind compatibility job,
+which upgrades the published Operator chart `v1.0.4` to the current chart from
+the checkout. The job builds the current operator image from that checkout and loads it into Kind, so the
 upgrade exercises the candidate controller rather than reusing the old
 `1.0.4` controller image. The chart corrects the published chart's missing
 HorizontalPodAutoscaler and NetworkPolicy permissions. The job reconciles a
 runtime on image `1.27.0`, verifies the updated service account permissions,
 restarts the controller so its caches initialize with those permissions, rolls
-forward to `1.29.1`, and waits for the operator's
-Ready condition and successful-image status, then rolls the runtime image back
-to `1.27.0` and verifies the restored workload. It does not roll the operator
-chart back to the known-incomplete `v1.0.4` chart.
+forward to the current compatibility target (`1.30.0`), and waits for the
+operator's Ready condition and successful-image status, then rolls the runtime
+image back to `1.27.0` and verifies the restored workload. The previously
+validated `1.29.1` target remains in the matrix as historical test evidence.
+It does not roll the operator chart back to the known-incomplete `v1.0.4`
+chart.
 The Runtime Helm chart `v1.3.1` remains the referenced chart release and
-defaults to runtime `1.27.0`; the tested `1.29.1` image is an explicit
-operator-managed override.
+defaults to runtime `1.27.0`; the tested `1.29.1` and `1.30.0` images are
+explicit operator-managed overrides.
 
 ## Runtime Contract Expected by the Operator
 
