@@ -353,12 +353,10 @@ func buildConfigMap(
 	runtimeResource *runtimev1alpha1.TrussiumRuntime,
 ) *corev1.ConfigMap {
 	return &corev1.ConfigMap{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      runtimeResource.Name,
-			Namespace: runtimeResource.Namespace,
-			Labels:    runtimeLabels(runtimeResource),
-		},
-		Data: runtimeConfigData(runtimeResource),
+		Name:      runtimeResource.Name,
+		Namespace: runtimeResource.Namespace,
+		Labels:    runtimeLabels(runtimeResource),
+		Data:      runtimeConfigData(runtimeResource),
 	}
 }
 
@@ -367,11 +365,9 @@ func buildServiceAccount(
 	runtimeResource *runtimev1alpha1.TrussiumRuntime,
 ) *corev1.ServiceAccount {
 	return &corev1.ServiceAccount{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      runtimeResource.Name,
-			Namespace: runtimeResource.Namespace,
-			Labels:    runtimeLabels(runtimeResource),
-		},
+		Name:                         runtimeResource.Name,
+		Namespace:                    runtimeResource.Namespace,
+		Labels:                       runtimeLabels(runtimeResource),
 		AutomountServiceAccountToken: ptr.To(false),
 		ImagePullSecrets:             imagePullSecrets(runtimeResource),
 	}
@@ -382,11 +378,9 @@ func buildService(
 	runtimeResource *runtimev1alpha1.TrussiumRuntime,
 ) *corev1.Service {
 	return &corev1.Service{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      runtimeResource.Name,
-			Namespace: runtimeResource.Namespace,
-			Labels:    runtimeLabels(runtimeResource),
-		},
+		Name:      runtimeResource.Name,
+		Namespace: runtimeResource.Namespace,
+		Labels:    runtimeLabels(runtimeResource),
 		Spec: corev1.ServiceSpec{
 			Type:     desiredServiceType(runtimeResource),
 			Selector: runtimeSelectorLabels(runtimeResource),
@@ -417,10 +411,8 @@ func providerCredentialEnv(
 			Name: envProviderAPIKey,
 			ValueFrom: &corev1.EnvVarSource{
 				SecretKeyRef: &corev1.SecretKeySelector{
-					LocalObjectReference: corev1.LocalObjectReference{
-						Name: secretReference.Name,
-					},
-					Key: secretReference.Key,
+					Name: secretReference.Name,
+					Key:  secretReference.Key,
 				},
 			},
 		},
@@ -439,11 +431,9 @@ func buildDeployment(
 	maxSurge := intstr.FromInt32(1)
 
 	return &appsv1.Deployment{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      runtimeResource.Name,
-			Namespace: runtimeResource.Namespace,
-			Labels:    labels,
-		},
+		Name:      runtimeResource.Name,
+		Namespace: runtimeResource.Namespace,
+		Labels:    labels,
 		Spec: appsv1.DeploymentSpec{
 			Replicas: ptr.To(initialDeploymentReplicas(runtimeResource)),
 			ProgressDeadlineSeconds: ptr.To(
@@ -536,13 +526,11 @@ func buildDeployment(
 							},
 
 							StartupProbe: &corev1.Probe{
-								ProbeHandler: corev1.ProbeHandler{
-									HTTPGet: &corev1.HTTPGetAction{
-										Path: healthLivePath,
-										Port: intstr.FromString(
-											runtimeHTTPPortName,
-										),
-									},
+								HTTPGet: &corev1.HTTPGetAction{
+									Path: healthLivePath,
+									Port: intstr.FromString(
+										runtimeHTTPPortName,
+									),
 								},
 								PeriodSeconds:    2,
 								TimeoutSeconds:   1,
@@ -550,13 +538,11 @@ func buildDeployment(
 							},
 
 							LivenessProbe: &corev1.Probe{
-								ProbeHandler: corev1.ProbeHandler{
-									HTTPGet: &corev1.HTTPGetAction{
-										Path: healthLivePath,
-										Port: intstr.FromString(
-											runtimeHTTPPortName,
-										),
-									},
+								HTTPGet: &corev1.HTTPGetAction{
+									Path: healthLivePath,
+									Port: intstr.FromString(
+										runtimeHTTPPortName,
+									),
 								},
 								PeriodSeconds:    10,
 								TimeoutSeconds:   2,
@@ -564,13 +550,11 @@ func buildDeployment(
 							},
 
 							ReadinessProbe: &corev1.Probe{
-								ProbeHandler: corev1.ProbeHandler{
-									HTTPGet: &corev1.HTTPGetAction{
-										Path: healthReadyPath,
-										Port: intstr.FromString(
-											runtimeHTTPPortName,
-										),
-									},
+								HTTPGet: &corev1.HTTPGetAction{
+									Path: healthReadyPath,
+									Port: intstr.FromString(
+										runtimeHTTPPortName,
+									),
 								},
 								PeriodSeconds:    5,
 								TimeoutSeconds:   2,
@@ -580,9 +564,7 @@ func buildDeployment(
 							EnvFrom: []corev1.EnvFromSource{
 								{
 									ConfigMapRef: &corev1.ConfigMapEnvSource{
-										LocalObjectReference: corev1.LocalObjectReference{
-											Name: runtimeResource.Name,
-										},
+										Name: runtimeResource.Name,
 									},
 								},
 							},
@@ -624,11 +606,9 @@ func buildPodDisruptionBudget(
 	maxUnavailable := intstr.FromInt32(1)
 
 	return &policyv1.PodDisruptionBudget{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      runtimeResource.Name,
-			Namespace: runtimeResource.Namespace,
-			Labels:    runtimeLabels(runtimeResource),
-		},
+		Name:      runtimeResource.Name,
+		Namespace: runtimeResource.Namespace,
+		Labels:    runtimeLabels(runtimeResource),
 		Spec: policyv1.PodDisruptionBudgetSpec{
 			MaxUnavailable: &maxUnavailable,
 			Selector: &metav1.LabelSelector{
@@ -669,11 +649,9 @@ func buildNetworkPolicy(
 	}
 
 	return &networkingv1.NetworkPolicy{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      runtimeResource.Name,
-			Namespace: runtimeResource.Namespace,
-			Labels:    runtimeLabels(runtimeResource),
-		},
+		Name:      runtimeResource.Name,
+		Namespace: runtimeResource.Namespace,
+		Labels:    runtimeLabels(runtimeResource),
 		Spec: networkingv1.NetworkPolicySpec{
 			PodSelector: metav1.LabelSelector{
 				MatchLabels: runtimeSelectorLabels(runtimeResource),
@@ -688,7 +666,9 @@ func buildNetworkPolicy(
 
 func buildHorizontalPodAutoscaler(runtimeResource *runtimev1alpha1.TrussiumRuntime) *autoscalingv2.HorizontalPodAutoscaler {
 	return &autoscalingv2.HorizontalPodAutoscaler{
-		ObjectMeta: metav1.ObjectMeta{Name: runtimeResource.Name, Namespace: runtimeResource.Namespace, Labels: runtimeLabels(runtimeResource)},
+		Name:      runtimeResource.Name,
+		Namespace: runtimeResource.Namespace,
+		Labels:    runtimeLabels(runtimeResource),
 		Spec: autoscalingv2.HorizontalPodAutoscalerSpec{
 			ScaleTargetRef: autoscalingv2.CrossVersionObjectReference{APIVersion: "apps/v1", Kind: "Deployment", Name: runtimeResource.Name},
 			MinReplicas:    ptr.To(desiredAutoscalingMinReplicas(runtimeResource)),
