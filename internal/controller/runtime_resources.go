@@ -365,11 +365,9 @@ func buildServiceAccount(
 	runtimeResource *runtimev1alpha1.TrussiumRuntime,
 ) *corev1.ServiceAccount {
 	return &corev1.ServiceAccount{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      runtimeResource.Name,
-			Namespace: runtimeResource.Namespace,
-			Labels:    runtimeLabels(runtimeResource),
-		},
+		Name:                         runtimeResource.Name,
+		Namespace:                    runtimeResource.Namespace,
+		Labels:                       runtimeLabels(runtimeResource),
 		AutomountServiceAccountToken: ptr.To(false),
 		ImagePullSecrets:             imagePullSecrets(runtimeResource),
 	}
@@ -380,11 +378,9 @@ func buildService(
 	runtimeResource *runtimev1alpha1.TrussiumRuntime,
 ) *corev1.Service {
 	return &corev1.Service{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      runtimeResource.Name,
-			Namespace: runtimeResource.Namespace,
-			Labels:    runtimeLabels(runtimeResource),
-		},
+		Name:      runtimeResource.Name,
+		Namespace: runtimeResource.Namespace,
+		Labels:    runtimeLabels(runtimeResource),
 		Spec: corev1.ServiceSpec{
 			Type:     desiredServiceType(runtimeResource),
 			Selector: runtimeSelectorLabels(runtimeResource),
@@ -415,10 +411,8 @@ func providerCredentialEnv(
 			Name: envProviderAPIKey,
 			ValueFrom: &corev1.EnvVarSource{
 				SecretKeyRef: &corev1.SecretKeySelector{
-					LocalObjectReference: corev1.LocalObjectReference{
-						Name: secretReference.Name,
-					},
-					Key: secretReference.Key,
+					Name: secretReference.Name,
+					Key:  secretReference.Key,
 				},
 			},
 		},
