@@ -1,6 +1,6 @@
 module github.com/trussiumhq/trussium-operator
 
-go 1.26.10
+go 1.27.4
 
 require (
 	github.com/onsi/ginkgo/v2 v2.34.0
