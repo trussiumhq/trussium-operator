@@ -550,13 +550,11 @@ func buildDeployment(
 							},
 
 							ReadinessProbe: &corev1.Probe{
-								ProbeHandler: corev1.ProbeHandler{
-									HTTPGet: &corev1.HTTPGetAction{
-										Path: healthReadyPath,
-										Port: intstr.FromString(
-											runtimeHTTPPortName,
-										),
-									},
+								HTTPGet: &corev1.HTTPGetAction{
+									Path: healthReadyPath,
+									Port: intstr.FromString(
+										runtimeHTTPPortName,
+									),
 								},
 								PeriodSeconds:    5,
 								TimeoutSeconds:   2,
@@ -566,9 +564,7 @@ func buildDeployment(
 							EnvFrom: []corev1.EnvFromSource{
 								{
 									ConfigMapRef: &corev1.ConfigMapEnvSource{
-										LocalObjectReference: corev1.LocalObjectReference{
-											Name: runtimeResource.Name,
-										},
+										Name: runtimeResource.Name,
 									},
 								},
 							},
@@ -610,11 +606,9 @@ func buildPodDisruptionBudget(
 	maxUnavailable := intstr.FromInt32(1)
 
 	return &policyv1.PodDisruptionBudget{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      runtimeResource.Name,
-			Namespace: runtimeResource.Namespace,
-			Labels:    runtimeLabels(runtimeResource),
-		},
+		Name:      runtimeResource.Name,
+		Namespace: runtimeResource.Namespace,
+		Labels:    runtimeLabels(runtimeResource),
 		Spec: policyv1.PodDisruptionBudgetSpec{
 			MaxUnavailable: &maxUnavailable,
 			Selector: &metav1.LabelSelector{
