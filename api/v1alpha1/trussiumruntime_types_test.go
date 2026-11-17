@@ -86,14 +86,10 @@ func TestTrussiumRuntimeJSONRoundTrip(t *testing.T) {
 	shutdownTimeout := int32(45)
 
 	original := TrussiumRuntime{
-		TypeMeta: {
-			APIVersion: GroupVersion.String(),
-			Kind:       "TrussiumRuntime",
-		},
-		ObjectMeta: {
-			Name:      "production",
-			Namespace: "trussium",
-		},
+		APIVersion: GroupVersion.String(),
+		Kind:       "TrussiumRuntime",
+		Name:       "production",
+		Namespace:  "trussium",
 		Spec: TrussiumRuntimeSpec{
 			Image: RuntimeImageSpec{
 				Repository: "ghcr.io/trussiumhq/trussium",
