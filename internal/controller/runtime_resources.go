@@ -356,7 +356,7 @@ func buildConfigMap(
 		Name:      runtimeResource.Name,
 		Namespace: runtimeResource.Namespace,
 		Labels:    runtimeLabels(runtimeResource),
-		Data: runtimeConfigData(runtimeResource),
+		Data:      runtimeConfigData(runtimeResource),
 	}
 }
 
