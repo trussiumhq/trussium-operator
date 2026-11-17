@@ -431,11 +431,9 @@ func buildDeployment(
 	maxSurge := intstr.FromInt32(1)
 
 	return &appsv1.Deployment{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      runtimeResource.Name,
-			Namespace: runtimeResource.Namespace,
-			Labels:    labels,
-		},
+		Name:      runtimeResource.Name,
+		Namespace: runtimeResource.Namespace,
+		Labels:    labels,
 		Spec: appsv1.DeploymentSpec{
 			Replicas: ptr.To(initialDeploymentReplicas(runtimeResource)),
 			ProgressDeadlineSeconds: ptr.To(
@@ -528,13 +526,11 @@ func buildDeployment(
 							},
 
 							StartupProbe: &corev1.Probe{
-								ProbeHandler: corev1.ProbeHandler{
-									HTTPGet: &corev1.HTTPGetAction{
-										Path: healthLivePath,
-										Port: intstr.FromString(
-											runtimeHTTPPortName,
-										),
-									},
+								HTTPGet: &corev1.HTTPGetAction{
+									Path: healthLivePath,
+									Port: intstr.FromString(
+										runtimeHTTPPortName,
+									),
 								},
 								PeriodSeconds:    2,
 								TimeoutSeconds:   1,
@@ -542,13 +538,11 @@ func buildDeployment(
 							},
 
 							LivenessProbe: &corev1.Probe{
-								ProbeHandler: corev1.ProbeHandler{
-									HTTPGet: &corev1.HTTPGetAction{
-										Path: healthLivePath,
-										Port: intstr.FromString(
-											runtimeHTTPPortName,
-										),
-									},
+								HTTPGet: &corev1.HTTPGetAction{
+									Path: healthLivePath,
+									Port: intstr.FromString(
+										runtimeHTTPPortName,
+									),
 								},
 								PeriodSeconds:    10,
 								TimeoutSeconds:   2,
