@@ -86,11 +86,11 @@ func TestTrussiumRuntimeJSONRoundTrip(t *testing.T) {
 	shutdownTimeout := int32(45)
 
 	original := TrussiumRuntime{
-		TypeMeta: metav1.TypeMeta{
+		TypeMeta: {
 			APIVersion: GroupVersion.String(),
 			Kind:       "TrussiumRuntime",
 		},
-		ObjectMeta: metav1.ObjectMeta{
+		ObjectMeta: {
 			Name:      "production",
 			Namespace: "trussium",
 		},

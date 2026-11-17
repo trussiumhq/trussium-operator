@@ -353,7 +353,7 @@ func buildConfigMap(
 	runtimeResource *runtimev1alpha1.TrussiumRuntime,
 ) *corev1.ConfigMap {
 	return &corev1.ConfigMap{
-		ObjectMeta: metav1.ObjectMeta{
+		ObjectMeta: {
 			Name:      runtimeResource.Name,
 			Namespace: runtimeResource.Namespace,
 			Labels:    runtimeLabels(runtimeResource),
