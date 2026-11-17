@@ -649,11 +649,9 @@ func buildNetworkPolicy(
 	}
 
 	return &networkingv1.NetworkPolicy{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      runtimeResource.Name,
-			Namespace: runtimeResource.Namespace,
-			Labels:    runtimeLabels(runtimeResource),
-		},
+		Name:      runtimeResource.Name,
+		Namespace: runtimeResource.Namespace,
+		Labels:    runtimeLabels(runtimeResource),
 		Spec: networkingv1.NetworkPolicySpec{
 			PodSelector: metav1.LabelSelector{
 				MatchLabels: runtimeSelectorLabels(runtimeResource),
@@ -668,7 +666,9 @@ func buildNetworkPolicy(
 
 func buildHorizontalPodAutoscaler(runtimeResource *runtimev1alpha1.TrussiumRuntime) *autoscalingv2.HorizontalPodAutoscaler {
 	return &autoscalingv2.HorizontalPodAutoscaler{
-		ObjectMeta: metav1.ObjectMeta{Name: runtimeResource.Name, Namespace: runtimeResource.Namespace, Labels: runtimeLabels(runtimeResource)},
+		Name:      runtimeResource.Name,
+		Namespace: runtimeResource.Namespace,
+		Labels:    runtimeLabels(runtimeResource),
 		Spec: autoscalingv2.HorizontalPodAutoscalerSpec{
 			ScaleTargetRef: autoscalingv2.CrossVersionObjectReference{APIVersion: "apps/v1", Kind: "Deployment", Name: runtimeResource.Name},
 			MinReplicas:    ptr.To(desiredAutoscalingMinReplicas(runtimeResource)),

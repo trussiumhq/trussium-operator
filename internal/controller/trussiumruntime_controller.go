@@ -361,10 +361,8 @@ func (r *TrussiumRuntimeReconciler) reconcileConfigMap(
 	desired := buildConfigMap(runtimeResource)
 
 	current := &corev1.ConfigMap{
-		ObjectMeta: metav1.ObjectMeta{
-			Name:      desired.Name,
-			Namespace: desired.Namespace,
-		},
+		Name:      desired.Name,
+		Namespace: desired.Namespace,
 	}
 
 	_, err := controllerutil.CreateOrUpdate(
